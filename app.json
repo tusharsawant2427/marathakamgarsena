@@ -1,0 +1,9 @@
+{
+  "name": "marathakamgarsena",
+  "displayName": "marathakamgarsena",
+  "splash": {
+    "image": "./assets/kamgarsena.jpg",
+    "resizeMode": "contain",
+    "backgroundColor": "#ffffff"
+  }
+}
