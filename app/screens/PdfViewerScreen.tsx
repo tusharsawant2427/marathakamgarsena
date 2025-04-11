@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Dimensions, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Dimensions,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import Pdf from 'react-native-pdf';
 import Header from '../components/Header';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -10,68 +17,71 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PdfViewer'>;
 
 const PdfViewerScreen = ({ route, navigation }: Props) => {
   const { pdfUrl, title } = route.params;
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [pdfError, setPdfError] = useState<string | null>(null);
-  const loadingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  const pdfPathRef = useRef<string | null>(null);
+  const [localPdfPath, setLocalPdfPath] = useState<string | null>(null);
+  const downloadRef = useRef<string | null>(null);
 
   useEffect(() => {
+    downloadPdf();
+
     return () => {
-      if (loadingTimeoutRef.current) {
-        clearTimeout(loadingTimeoutRef.current);
-      }
-      // Cleanup downloaded PDF file
-      if (pdfPathRef.current) {
-        RNFetchBlob.fs.unlink(pdfPathRef.current)
-          .then(() => {
-            console.log('PDF file cleaned up successfully');
-          })
-          .catch((err: Error) => console.error('Error cleaning up PDF file:', err));
+      if (downloadRef.current) {
+        RNFetchBlob.fs
+          .unlink(downloadRef.current)
+          .then(() => console.log('PDF cleaned up'))
+          .catch((err) => console.error('Cleanup error:', err));
       }
     };
   }, []);
 
-  const handleLoadComplete = (numberOfPages: number) => {
-    setTotalPages(numberOfPages);
-    if (loadingTimeoutRef.current) {
-      clearTimeout(loadingTimeoutRef.current);
-    }
-    loadingTimeoutRef.current = setTimeout(() => {
+  const downloadPdf = async () => {
+    try {
+      setIsLoading(true);
+      const { config, fs } = RNFetchBlob;
+      const filePath = `${fs.dirs.DocumentDir}/temp_${Date.now()}.pdf`;
+
+      const fetchInstance = RNFetchBlob.config({
+        path: filePath,
+        fileCache: true,
+        appendExt: 'pdf',
+      })
+        .fetch('GET', pdfUrl)
+        .progress((received: string, total: string) => {
+          const totalNum = parseInt(total, 10);
+          if (totalNum > 0) {
+            setLoadingProgress(parseInt(received, 10) / totalNum);
+          }
+        })
+        .then((res) => {
+          setLocalPdfPath(res.path());
+          downloadRef.current = res.path();
+          setIsLoading(false);
+        })
+        .catch((error: Error) => {
+          console.error('PDF download error:', error);
+          setPdfError('Failed to load PDF');
+          setIsLoading(false);
+        });
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setPdfError('Unexpected error');
       setIsLoading(false);
-      setLoadingProgress(1);
-    }, 500);
-  };
-
-  const handleLoadProgress = (percent: number) => {
-    setLoadingProgress(percent);
-    if (percent >= 1) {
-      if (loadingTimeoutRef.current) {
-        clearTimeout(loadingTimeoutRef.current);
-      }
-      loadingTimeoutRef.current = setTimeout(() => {
-        setIsLoading(false);
-      }, 500);
     }
   };
 
-  const handleError = (error: any) => {
-    console.error('PDF Error:', error);
-    setPdfError(error.message || 'Unknown error occurred');
-    setIsLoading(false);
-  };
-
-  const handleDownload = async () => {
+  const handleDownloadToDevice = async () => {
     try {
       setIsDownloading(true);
-      const { config } = RNFetchBlob;
-      const date = new Date();
-      const fileName = `${title}_${Math.floor(date.getTime() + date.getSeconds() / 2)}.pdf`;
-      
-      const response = await config({
+      const { config, fs } = RNFetchBlob;
+      const fileName = `${title.replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.pdf`;
+      const destPath = `${fs.dirs.DownloadDir}/${fileName}`;
+
+      const res = await config({
         fileCache: true,
         addAndroidDownloads: {
           useDownloadManager: true,
@@ -80,16 +90,13 @@ const PdfViewerScreen = ({ route, navigation }: Props) => {
           description: 'Downloading PDF',
           mime: 'application/pdf',
           mediaScannable: true,
-          path: `${RNFetchBlob.fs.dirs.DownloadDir}/${fileName}`
-        }
+          path: destPath,
+        },
       }).fetch('GET', pdfUrl);
 
-      if (response.info().status === 200) {
-        console.log('File downloaded successfully');
-        pdfPathRef.current = `${RNFetchBlob.fs.dirs.DownloadDir}/${fileName}`;
-      }
+      console.log('File downloaded to:', res.path());
     } catch (error) {
-      console.error('Download error:', error);
+      console.error('Download to device failed:', error);
     } finally {
       setIsDownloading(false);
     }
@@ -98,63 +105,53 @@ const PdfViewerScreen = ({ route, navigation }: Props) => {
   return (
     <View style={styles.container}>
       <Header
-        title=""
+        title={title}
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
         showIcons={false}
       />
+
       <View style={styles.titleContainer}>
         <Text style={styles.title}>{title}</Text>
-        <Text style={styles.pageInfo}>{currentPage} / {totalPages}</Text>
+        <Text style={styles.pageInfo}>
+          {currentPage} / {totalPages || '...'}
+        </Text>
       </View>
+
       <View style={styles.pdfContainer}>
-        {isLoading && (
+        {isLoading ? (
           <View style={styles.loaderContainer}>
             <ActivityIndicator size="large" color="#FF5722" />
             <Text style={styles.loaderText}>
-              Loading PDF... {loadingProgress > 0 ? `${Math.round(loadingProgress * 100)}%` : ''}
+              Loading... {Math.round(loadingProgress * 100)}%
             </Text>
           </View>
-        )}
-        {pdfError ? (
+        ) : pdfError ? (
           <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>Failed to load PDF. Please try again.</Text>
+            <Text style={styles.errorText}>Error loading PDF.</Text>
             <Text style={styles.errorDetail}>{pdfError}</Text>
           </View>
-        ) : (
+        ) : localPdfPath ? (
           <Pdf
-            trustAllCerts={false}
-            source={{
-              uri: pdfUrl,
-              cache: true,
-              headers: {
-                Accept: 'application/pdf',
-                'Cache-Control': 'no-cache',
-              },
-              expiration: 0,
+            source={{ uri: localPdfPath }}
+            style={styles.pdf}
+            onLoadComplete={(pages) => setTotalPages(pages)}
+            onPageChanged={(page) => setCurrentPage(page)}
+            onError={(error) => {
+              console.error('PDF error:', error);
+              setPdfError('Failed to display PDF');
             }}
-            style={[styles.pdf, isLoading && styles.hiddenPdf]}
-            onLoadProgress={handleLoadProgress}
-            onLoadComplete={handleLoadComplete}
-            onPageChanged={(page: number) => setCurrentPage(page)}
-            onError={handleError}
-            horizontal={true}
-            scale={1.2}
-            spacing={10}
-            minScale={1.0}
-            maxScale={4.0}
-            enableAnnotationRendering={true}
-            enablePaging={false}
           />
-        )}
+        ) : null}
       </View>
-      <TouchableOpacity 
-        style={styles.downloadButton} 
-        onPress={handleDownload}
-        disabled={isDownloading || isLoading}
+
+      <TouchableOpacity
+        style={styles.downloadButton}
+        onPress={handleDownloadToDevice}
+        disabled={isDownloading || !localPdfPath}
       >
         {isDownloading ? (
-          <ActivityIndicator color="#fff" size="small" />
+          <ActivityIndicator color="#fff" />
         ) : (
           <Text style={styles.downloadText}>↓</Text>
         )}
@@ -188,18 +185,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   loaderContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    zIndex: 1,
   },
   loaderText: {
-    marginTop: 12,
+    marginTop: 8,
     fontSize: 16,
     color: '#666',
   },
@@ -226,9 +217,6 @@ const styles = StyleSheet.create({
     height: Dimensions.get('window').height,
     backgroundColor: '#fff',
   },
-  hiddenPdf: {
-    opacity: 0,
-  },
   downloadButton: {
     position: 'absolute',
     bottom: 24,
@@ -240,10 +228,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
   },
   downloadText: {
     color: '#fff',
