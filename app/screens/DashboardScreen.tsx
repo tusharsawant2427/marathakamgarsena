@@ -8,11 +8,17 @@ import {
   Dimensions,
   SafeAreaView,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type RootStackParamList = {
   Dashboard: undefined;
+  Login: undefined;
+  Profile: undefined;
+  ContactUs: undefined;
+  Issues: undefined;
+  LaborLaws: undefined;
 };
 
 type DashboardScreenProps = {
@@ -27,6 +33,7 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
       id: 1,
       title: 'Contact Us',
       icon: require('../../assets/phone.png'),
+      onPress: () => navigation.navigate('ContactUs'),
     },
     {
       id: 2,
@@ -37,36 +44,91 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
       id: 3,
       title: 'Issues and Help',
       icon: require('../../assets/ic_issues.png'),
+      onPress: () => navigation.navigate('Issues'),
     },
     {
       id: 4,
       title: 'Labour Laws',
       icon: require('../../assets/law.png'),
+      onPress: () => navigation.navigate('LaborLaws'),
+    },
+  ];
+
+  const socialHandles = [
+    {
+      id: 1,
+      title: 'Facebook',
+      icon: require('../../assets/ic_facebook.png'),
+    },
+    {
+      id: 2,
+      title: 'Instagram',
+      icon: require('../../assets/ic_instagram.png'),
+    },
+    {
+      id: 3,
+      title: 'Youtube',
+      icon: require('../../assets/ic_youtube.png'),
+    },
+    {
+      id: 4,
+      title: 'Twitter',
+      icon: require('../../assets/ic_twitter.png'),
+    },
+  ];
+
+  const otherOptions = [
+    {
+      id: 1,
+      title: 'Share This App',
+      icon: require('../../assets/share.png'),
+    },
+    {
+      id: 2,
+      title: 'भाषा मराठी करा',
+      icon: require('../../assets/world.png'),
     },
   ];
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={[styles.headerContainer, { height: 85 }]}>
+      <View style={[styles.headerContainer, { height: 93 }]}>
         <View style={styles.headerPattern}>
           <Image 
             source={require('../../assets/header_small.png')}
-            style={[styles.headerImage, { height: 90 }]}
+            style={[styles.headerImage, { height: 100 }]}
             resizeMode="cover"
           />
-          <Text style={[styles.headerText, { fontSize: 24 }]}>Marathi Kamgar Sena</Text>
+          <Text style={[styles.headerText, { fontSize: 17 }]}>Marathi Kamgar Sena</Text>
           <View style={styles.headerIcons}>
             <TouchableOpacity>
               <Image 
-                source={require('../../assets/ic_notification.png')}
-                style={styles.iconImage}
+                source={require('../../assets/bell.png')}
+                style={[styles.iconImage, { width: 20, height: 20 }]}
               />
             </TouchableOpacity>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => {
+              Alert.alert(
+                "Logout",
+                "Are you sure you want to logout?",
+                [
+                  {
+                    text: "Cancel",
+                    style: "cancel"
+                  },
+                  {
+                    text: "Logout",
+                    onPress: () => {
+                      navigation.navigate('Login');
+                    }
+                  }
+                ]
+              );
+            }}>
               <Image 
-                source={require('../../assets/ic_notification.png')}
-                style={styles.iconImage}
+                source={require('../../assets/logout.png')}
+                style={[styles.iconImage, { width: 20, height: 20 }]}
               />
             </TouchableOpacity>
           </View>
@@ -84,6 +146,7 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
                 styles.menuItem,
                 index % 2 === 0 ? { marginRight: 10 } : { marginLeft: 10 }
               ]}
+              onPress={item.onPress}
             >
               <View style={styles.iconContainer}>
                 <Image source={item.icon} style={styles.menuIcon} />
@@ -113,6 +176,44 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
           />
           <Text style={styles.profileText}>Profile</Text>
         </TouchableOpacity>
+
+        {/* Social Handles Section */}
+        <Text style={[styles.sectionTitle, { marginTop: 30 }]}>Social Handles</Text>
+        <View style={styles.menuGrid}>
+          {socialHandles.map((item, index) => (
+            <TouchableOpacity
+              key={item.id}
+              style={[
+                styles.menuItem,
+                index % 2 === 0 ? { marginRight: 10 } : { marginLeft: 10 }
+              ]}
+            >
+              <View style={styles.iconContainer}>
+                <Image source={item.icon} style={styles.menuIcon} />
+              </View>
+              <Text style={styles.menuText}>{item.title}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Other Section */}
+        <Text style={[styles.sectionTitle, { marginTop: 10 }]}>Other</Text>
+        <View style={styles.menuGrid}>
+          {otherOptions.map((item, index) => (
+            <TouchableOpacity
+              key={item.id}
+              style={[
+                styles.menuItem,
+                index % 2 === 0 ? { marginRight: 10 } : { marginLeft: 10 }
+              ]}
+            >
+              <View style={styles.iconContainer}>
+                <Image source={item.icon} style={styles.menuIcon} />
+              </View>
+              <Text style={styles.menuText}>{item.title}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -141,16 +242,17 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 24,
     fontWeight: 'bold',
-    textAlign: 'center',
+    textAlign: 'left',
     marginBottom: 0,
     position: 'absolute',
     width: '100%',
-    top: 20,
+    top: 35,
+    left: 20,
   },
   headerIcons: {
     position: 'absolute',
     right: 15,
-    top: 20,
+    top: 40,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -165,10 +267,10 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   sectionTitle: {
-    fontSize: 24,
+    fontSize: 19,
     fontWeight: 'bold',
     color: '#FF5722',
-    marginBottom: 20,
+    marginBottom: 13,
   },
   menuGrid: {
     flexDirection: 'row',
@@ -203,7 +305,7 @@ const styles = StyleSheet.create({
     tintColor: '#fff',
   },
   menuText: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#333',
     textAlign: 'center',
     fontWeight: '500',
