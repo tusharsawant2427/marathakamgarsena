@@ -9,8 +9,12 @@ import {
   SafeAreaView,
   ScrollView,
   Alert,
+  Linking,
+  Share,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import DashboardGridItem from '../components/DashboardGridItem';
 
 type RootStackParamList = {
   Dashboard: undefined;
@@ -19,6 +23,8 @@ type RootStackParamList = {
   ContactUs: undefined;
   Issues: undefined;
   LaborLaws: undefined;
+  Notifications: undefined;
+  ApplyIDCard: undefined;
 };
 
 type DashboardScreenProps = {
@@ -28,6 +34,7 @@ type DashboardScreenProps = {
 const { width } = Dimensions.get('window');
 
 const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
+
   const menuItems = [
     {
       id: 1,
@@ -39,6 +46,7 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
       id: 2,
       title: 'Apply for ID Card',
       icon: require('../../assets/id-card.png'),
+      onPress: () => navigation.navigate('ApplyIDCard'),
     },
     {
       id: 3,
@@ -59,29 +67,59 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
       id: 1,
       title: 'Facebook',
       icon: require('../../assets/ic_facebook.png'),
+      url: 'https://m.facebook.com/Marathikamgarsena/',
     },
     {
       id: 2,
       title: 'Instagram',
       icon: require('../../assets/ic_instagram.png'),
+      url: 'https://www.instagram.com/marathikamgarsena?igsh=d3g0YjVneWt1ZzZr',
     },
     {
       id: 3,
       title: 'Youtube',
       icon: require('../../assets/ic_youtube.png'),
+      url: 'https://youtube.com/@marathikamgarsena?si=R0TIVw2Njdwo_w_W',
     },
     {
       id: 4,
       title: 'Twitter',
       icon: require('../../assets/ic_twitter.png'),
+      url: 'https://x.com/MarathiSena?t=23Dr208jA9gEhyUOdPS1AQ&s=09',
     },
   ];
+
+  const handleShareApp = async () => {
+    try {
+      const shareMessage = `https://play.google.com/store/apps/details?id=comm.mks.india
+
+जय महाराष्ट्र...
+
+मराठी कामगार सेनेचे सभासद होण्यासाठी वरील लिंक वरून मराठी कामगार सेनाचा मोबाईल ॲप डाऊनलोड करा व मराठी कामगार सेनेचे सभासद बना...
+धन्यवाद.
+
+आपला,
+महेश जाधव
+अध्यक्ष - मराठी कामगार सेना.
+प्रदेश उपाध्यक्ष -राष्ट्रवादी काँग्रेस पार्टी
+088503 51106
+083695 19408`;
+
+      await Share.share({
+        message: shareMessage,
+      });
+    } catch (error) {
+      console.error('Error sharing:', error);
+      Alert.alert('Error', 'Failed to share the app. Please try again later.');
+    }
+  };
 
   const otherOptions = [
     {
       id: 1,
       title: 'Share This App',
       icon: require('../../assets/share.png'),
+      onPress: handleShareApp,
     },
     {
       id: 2,
@@ -89,6 +127,24 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
       icon: require('../../assets/world.png'),
     },
   ];
+
+  const handleSocialPress = async (url: string) => {
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        // If URL is not supported, try opening in browser
+        const browserUrl = url.startsWith('https://') ? url : `https://${url}`;
+        await Linking.openURL(browserUrl).catch(() => {
+          Alert.alert('Error', 'Could not open the URL. Please try again later.');
+        });
+      }
+    } catch (error) {
+      console.error('Error opening URL:', error);
+      Alert.alert('Error', 'An error occurred while trying to open the URL. Please try again later.');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -102,7 +158,7 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
           />
           <Text style={[styles.headerText, { fontSize: 17 }]}>Marathi Kamgar Sena</Text>
           <View style={styles.headerIcons}>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
               <Image 
                 source={require('../../assets/bell.png')}
                 style={[styles.iconImage, { width: 20, height: 20 }]}
@@ -137,7 +193,6 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
 
       <ScrollView style={styles.content}>
         <Text style={styles.sectionTitle}>Contact and Support</Text>
-
         <View style={styles.menuGrid}>
           {menuItems.map((item, index) => (
             <TouchableOpacity
@@ -169,7 +224,10 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.profileSection}>
+        <TouchableOpacity 
+          style={styles.profileSection}
+          onPress={() => navigation.navigate('Profile')}
+        >
           <Image 
             source={require('../../assets/profile.png')}
             style={styles.profileIcon}
@@ -187,6 +245,7 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
                 styles.menuItem,
                 index % 2 === 0 ? { marginRight: 10 } : { marginLeft: 10 }
               ]}
+              onPress={() => handleSocialPress(item.url)}
             >
               <View style={styles.iconContainer}>
                 <Image source={item.icon} style={styles.menuIcon} />
@@ -206,6 +265,7 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
                 styles.menuItem,
                 index % 2 === 0 ? { marginRight: 10 } : { marginLeft: 10 }
               ]}
+              onPress={item.onPress}
             >
               <View style={styles.iconContainer}>
                 <Image source={item.icon} style={styles.menuIcon} />
@@ -271,6 +331,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FF5722',
     marginBottom: 13,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 8,
+  },
+  gridItem: {
+    width: '50%',
+    aspectRatio: 1,
   },
   menuGrid: {
     flexDirection: 'row',

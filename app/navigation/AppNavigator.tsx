@@ -9,6 +9,10 @@ import IssuesScreen from '../screens/IssuesScreen';
 import AddIssueScreen from '../screens/AddIssueScreen';
 import LaborLawsScreen from '../screens/LaborLawsScreen';
 import PdfViewerScreen from '../screens/PdfViewerScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
+import ApplyIDCardScreen from '../screens/ApplyIDCardScreen';
 import { RootStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -30,6 +34,10 @@ export default function AppNavigator() {
         <Stack.Screen name="AddIssue" component={AddIssueScreen} />
         <Stack.Screen name="LaborLaws" component={LaborLawsScreen} />
         <Stack.Screen name="PdfViewer" component={PdfViewerScreen} />
+        <Stack.Screen name="Notifications" component={NotificationsScreen} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+        <Stack.Screen name="ApplyIDCard" component={ApplyIDCardScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -12,6 +12,10 @@ export type RootStackParamList = {
     pdfUrl: string;
     title: string;
   };
+  Notifications: undefined;
+  Profile: undefined;
+  EditProfile: undefined;
+  ApplyIDCard: undefined;
 };
 
 export type NavigationProp = NativeStackNavigationProp<RootStackParamList>; 
