@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
+import { useLanguage } from '../context/LanguageContext';
 import DashboardGridItem from '../components/DashboardGridItem';
 
 type RootStackParamList = {
@@ -34,29 +35,30 @@ type DashboardScreenProps = {
 const { width } = Dimensions.get('window');
 
 const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
+  const { language, setLanguage, translations } = useLanguage();
 
   const menuItems = [
     {
       id: 1,
-      title: 'Contact Us',
+      title: translations.contactUs[language],
       icon: require('../../assets/phone.png'),
       onPress: () => navigation.navigate('ContactUs'),
     },
     {
       id: 2,
-      title: 'Apply for ID Card',
+      title: translations.applyIdCard[language],
       icon: require('../../assets/id-card.png'),
       onPress: () => navigation.navigate('ApplyIDCard'),
     },
     {
       id: 3,
-      title: 'Issues and Help',
+      title: translations.issuesAndHelp[language],
       icon: require('../../assets/ic_issues.png'),
       onPress: () => navigation.navigate('Issues'),
     },
     {
       id: 4,
-      title: 'Labour Laws',
+      title: translations.labourLaws[language],
       icon: require('../../assets/law.png'),
       onPress: () => navigation.navigate('LaborLaws'),
     },
@@ -117,14 +119,15 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
   const otherOptions = [
     {
       id: 1,
-      title: 'Share This App',
+      title: translations.shareApp[language],
       icon: require('../../assets/share.png'),
       onPress: handleShareApp,
     },
     {
       id: 2,
-      title: 'भाषा मराठी करा',
+      title: translations.changeLanguage[language],
       icon: require('../../assets/world.png'),
+      onPress: () => setLanguage(language === 'en' ? 'mr' : 'en'),
     },
   ];
 
@@ -166,15 +169,15 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
             </TouchableOpacity>
             <TouchableOpacity onPress={() => {
               Alert.alert(
-                "Logout",
-                "Are you sure you want to logout?",
+                translations.logout[language],
+                translations.logoutConfirm[language],
                 [
                   {
-                    text: "Cancel",
+                    text: translations.cancel[language],
                     style: "cancel"
                   },
                   {
-                    text: "Logout",
+                    text: translations.logout[language],
                     onPress: () => {
                       navigation.navigate('Login');
                     }
@@ -192,7 +195,7 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
       </View>
 
       <ScrollView style={styles.content}>
-        <Text style={styles.sectionTitle}>Contact and Support</Text>
+        <Text style={styles.sectionTitle}>{translations.contactUs[language]}</Text>
         <View style={styles.menuGrid}>
           {menuItems.map((item, index) => (
             <TouchableOpacity
@@ -217,10 +220,10 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
               source={require('../../assets/ic_news.png')}
               style={styles.newsIcon}
             />
-            <Text style={styles.newsTitle}>News and New Information</Text>
+            <Text style={styles.newsTitle}>{translations.news[language]}</Text>
           </View>
           <View style={styles.newsContent}>
-            <Text style={styles.noDataText}>No Data</Text>
+            <Text style={styles.noDataText}>{translations.noData[language]}</Text>
           </View>
         </View>
 
@@ -232,11 +235,11 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
             source={require('../../assets/profile.png')}
             style={styles.profileIcon}
           />
-          <Text style={styles.profileText}>Profile</Text>
+          <Text style={styles.profileText}>{translations.profile[language]}</Text>
         </TouchableOpacity>
 
         {/* Social Handles Section */}
-        <Text style={[styles.sectionTitle, { marginTop: 30 }]}>Social Handles</Text>
+        <Text style={[styles.sectionTitle, { marginTop: 30 }]}>{translations.socialHandles[language]}</Text>
         <View style={styles.menuGrid}>
           {socialHandles.map((item, index) => (
             <TouchableOpacity
@@ -256,7 +259,7 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
         </View>
 
         {/* Other Section */}
-        <Text style={[styles.sectionTitle, { marginTop: 10 }]}>Other</Text>
+        <Text style={[styles.sectionTitle, { marginTop: 10 }]}>{translations.other[language]}</Text>
         <View style={styles.menuGrid}>
           {otherOptions.map((item, index) => (
             <TouchableOpacity

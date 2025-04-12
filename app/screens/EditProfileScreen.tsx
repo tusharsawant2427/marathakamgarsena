@@ -14,12 +14,15 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Header from '../components/Header';
 import { RootStackParamList } from '../types/navigation';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import { useLanguage } from '../context/LanguageContext';
 
 type EditProfileScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'EditProfile'>;
 };
 
 const EditProfileScreen = ({ navigation }: EditProfileScreenProps) => {
+  const { language, translations } = useLanguage();
+  
   const [profileData, setProfileData] = useState({
     name: 'Tushar',
     email: 'tusharsawant242726@gmail.com',
@@ -31,11 +34,11 @@ const EditProfileScreen = ({ navigation }: EditProfileScreenProps) => {
 
   const handleImagePicker = () => {
     Alert.alert(
-      'Select Profile Picture',
-      'Choose an option',
+      translations.editProfileSelectPicture[language],
+      translations.editProfileChooseGallery[language],
       [
         {
-          text: 'Choose from Gallery',
+          text: translations.editProfileChooseGallery[language],
           onPress: () => {
             launchImageLibrary({
               mediaType: 'photo',
@@ -52,7 +55,7 @@ const EditProfileScreen = ({ navigation }: EditProfileScreenProps) => {
           },
         },
         {
-          text: 'Cancel',
+          text: translations.editProfileCancel[language],
           style: 'cancel',
         },
       ],
@@ -68,7 +71,7 @@ const EditProfileScreen = ({ navigation }: EditProfileScreenProps) => {
   return (
     <SafeAreaView style={styles.container}>
       <Header
-        title="Edit Profile"
+        title={translations.editProfileTitle[language]}
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
         showIcons={false}
@@ -95,12 +98,12 @@ const EditProfileScreen = ({ navigation }: EditProfileScreenProps) => {
               style={styles.inputIcon}
             />
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Enter User Name</Text>
+              <Text style={styles.inputLabel}>{translations.editProfileName[language]}</Text>
               <TextInput
                 style={styles.input}
                 value={profileData.name}
                 onChangeText={(text) => setProfileData({ ...profileData, name: text })}
-                placeholder="Enter your name"
+                placeholder={translations.editProfileName[language]}
               />
             </View>
           </View>
@@ -111,12 +114,12 @@ const EditProfileScreen = ({ navigation }: EditProfileScreenProps) => {
               style={styles.inputIcon}
             />
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Please Enter Email Address</Text>
+              <Text style={styles.inputLabel}>{translations.editProfileEmail[language]}</Text>
               <TextInput
                 style={styles.input}
                 value={profileData.email}
                 onChangeText={(text) => setProfileData({ ...profileData, email: text })}
-                placeholder="Enter your email"
+                placeholder={translations.editProfileEmail[language]}
                 keyboardType="email-address"
               />
             </View>
@@ -128,12 +131,12 @@ const EditProfileScreen = ({ navigation }: EditProfileScreenProps) => {
               style={styles.inputIcon}
             />
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Please Enter Company Name</Text>
+              <Text style={styles.inputLabel}>{translations.editProfileCompanyName[language]}</Text>
               <TextInput
                 style={styles.input}
                 value={profileData.companyName}
                 onChangeText={(text) => setProfileData({ ...profileData, companyName: text })}
-                placeholder="Enter company name"
+                placeholder={translations.editProfileCompanyName[language]}
               />
             </View>
           </View>
@@ -144,12 +147,12 @@ const EditProfileScreen = ({ navigation }: EditProfileScreenProps) => {
               style={styles.inputIcon}
             />
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Please Enter Designation</Text>
+              <Text style={styles.inputLabel}>{translations.editProfileDesignation[language]}</Text>
               <TextInput
                 style={styles.input}
                 value={profileData.designation}
                 onChangeText={(text) => setProfileData({ ...profileData, designation: text })}
-                placeholder="Enter your designation"
+                placeholder={translations.editProfileDesignation[language]}
               />
             </View>
           </View>
@@ -160,12 +163,12 @@ const EditProfileScreen = ({ navigation }: EditProfileScreenProps) => {
               style={styles.inputIcon}
             />
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Enter an address</Text>
+              <Text style={styles.inputLabel}>{translations.editProfileAddress[language]}</Text>
               <TextInput
                 style={styles.input}
                 value={profileData.address}
                 onChangeText={(text) => setProfileData({ ...profileData, address: text })}
-                placeholder="Enter your address"
+                placeholder={translations.editProfileAddress[language]}
                 multiline
               />
             </View>
@@ -173,7 +176,7 @@ const EditProfileScreen = ({ navigation }: EditProfileScreenProps) => {
         </View>
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>SAVE PROFILE</Text>
+          <Text style={styles.saveButtonText}>{translations.editProfileSave[language]}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

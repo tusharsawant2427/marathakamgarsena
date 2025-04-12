@@ -8,30 +8,29 @@ import {
   TouchableOpacity,
   Dimensions,
   SafeAreaView,
+  Alert,
 } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
-type RootStackParamList = {
-  Login: undefined;
-  OtpScreen: undefined;
-};
-
-type LoginScreenProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'Login'>;
-};
+import { useNavigation } from '@react-navigation/native';
+import { useLanguage } from '../context/LanguageContext';
+import { NavigationProp } from '../types/navigation';
+import { Language } from '../types/language';
 
 const { width } = Dimensions.get('window');
 
-const LoginScreen = ({ navigation }: LoginScreenProps) => {
-  const [selectedLanguage, setSelectedLanguage] = useState('english');
+const LoginScreen = () => {
+  const navigation = useNavigation<NavigationProp>();
+  const { language, translations, setLanguage } = useLanguage();
   const [phoneNumber, setPhoneNumber] = useState('');
 
-  const handleContinue = () => {
-    if (phoneNumber.length === 10) {
-      if (navigation) {
-        navigation.navigate('OtpScreen');
-      }
+  const handleLogin = () => {
+    if (phoneNumber.length !== 10) {
+      Alert.alert(
+        translations.error[language],
+        translations.invalidPhone[language]
+      );
+      return;
     }
+    navigation.navigate('OtpScreen', { phoneNumber });
   };
 
   return (
@@ -68,23 +67,23 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
         <TouchableOpacity
           style={[
             styles.languageButton,
-            selectedLanguage === 'marathi' && styles.selectedLanguage,
+            language === 'mr' && styles.selectedLanguage,
           ]}
-          onPress={() => setSelectedLanguage('marathi')}>
+          onPress={() => setLanguage('mr')}>
           <Text style={[
             styles.languageText,
-            selectedLanguage === 'marathi' && styles.selectedLanguageText
+            language === 'mr' && styles.selectedLanguageText
           ]}>मराठी</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[
             styles.languageButton,
-            selectedLanguage === 'english' && styles.selectedLanguage,
+            language === 'en' && styles.selectedLanguage,
           ]}
-          onPress={() => setSelectedLanguage('english')}>
+          onPress={() => setLanguage('en')}>
           <Text style={[
             styles.languageText,
-            selectedLanguage === 'english' && styles.selectedLanguageText
+            language === 'en' && styles.selectedLanguageText
           ]}>English</Text>
         </TouchableOpacity>
       </View>
@@ -110,7 +109,7 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
           styles.continueButton,
           phoneNumber.length !== 10 && styles.continueButtonDisabled
         ]}
-        onPress={handleContinue}
+        onPress={handleLogin}
         disabled={phoneNumber.length !== 10}
       >
         <Text style={styles.continueButtonText}>Continue</Text>

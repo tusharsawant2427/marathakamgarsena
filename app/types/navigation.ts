@@ -2,7 +2,9 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export type RootStackParamList = {
   Login: undefined;
-  OtpScreen: undefined;
+  OtpScreen: {
+    phoneNumber: string;
+  };
   Dashboard: undefined;
   ContactUs: undefined;
   Issues: undefined;

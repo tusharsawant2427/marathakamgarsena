@@ -10,12 +10,15 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Header from '../components/Header';
 import { RootStackParamList } from '../types/navigation';
+import { useLanguage } from '../context/LanguageContext';
 
 type ProfileScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Profile'>;
 };
 
 const ProfileScreen = ({ navigation }: ProfileScreenProps) => {
+  const { language, translations } = useLanguage();
+
   const profileData = {
     name: 'Tushar',
     mobileNumber: '7977796967',
@@ -40,7 +43,7 @@ const ProfileScreen = ({ navigation }: ProfileScreenProps) => {
   return (
     <SafeAreaView style={styles.container}>
       <Header
-        title="Profile"
+        title={translations.profile[language]}
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
         showIcons={false}
@@ -65,7 +68,7 @@ const ProfileScreen = ({ navigation }: ProfileScreenProps) => {
               />
             </View>
             <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Mobile Number</Text>
+              <Text style={styles.infoLabel}>{translations.profileMobileNumber[language]}</Text>
               <Text style={styles.infoValue}>{profileData.mobileNumber}</Text>
             </View>
           </View>
@@ -78,7 +81,7 @@ const ProfileScreen = ({ navigation }: ProfileScreenProps) => {
               />
             </View>
             <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Email Address:</Text>
+              <Text style={styles.infoLabel}>{translations.profileEmail[language]}</Text>
               <Text style={styles.infoValue}>{profileData.emailAddress}</Text>
             </View>
           </View>
@@ -91,7 +94,7 @@ const ProfileScreen = ({ navigation }: ProfileScreenProps) => {
               />
             </View>
             <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Company Name</Text>
+              <Text style={styles.infoLabel}>{translations.profileCompanyName[language]}</Text>
               <Text style={styles.infoValue}>{profileData.companyName}</Text>
             </View>
           </View>
@@ -104,7 +107,7 @@ const ProfileScreen = ({ navigation }: ProfileScreenProps) => {
               />
             </View>
             <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Designation / Job profile</Text>
+              <Text style={styles.infoLabel}>{translations.profileDesignation[language]}</Text>
               <Text style={styles.infoValue}>{profileData.designation}</Text>
             </View>
           </View>
@@ -117,7 +120,7 @@ const ProfileScreen = ({ navigation }: ProfileScreenProps) => {
               />
             </View>
             <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Registration Number</Text>
+              <Text style={styles.infoLabel}>{translations.profileRegistrationNumber[language]}</Text>
               <Text style={styles.infoValue}>{profileData.registrationNumber}</Text>
             </View>
           </View>

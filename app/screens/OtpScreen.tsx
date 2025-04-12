@@ -9,28 +9,27 @@ import {
   Dimensions,
   SafeAreaView,
   BackHandler,
+  Alert,
 } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useLanguage } from '../context/LanguageContext';
+import { RootStackParamList, NavigationProp } from '../types/navigation';
 
-type RootStackParamList = {
-  Login: undefined;
-  OtpScreen: undefined;
-  Dashboard: undefined;
-};
-
-type OtpScreenProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'OtpScreen'>;
-};
+type OtpScreenRouteProp = RouteProp<RootStackParamList, 'OtpScreen'>;
 
 const { width } = Dimensions.get('window');
 
-const OtpScreen = ({ navigation }: OtpScreenProps) => {
-  const [otp, setOtp] = useState(['', '', '', '']);
+const OtpScreen = () => {
+  const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<OtpScreenRouteProp>();
+  const { language, translations } = useLanguage();
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef<Array<TextInput | null>>([]);
+  const phoneNumber = route.params.phoneNumber;
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      setOtp(['', '', '', '']);
+      setOtp(['', '', '', '', '', '']);
       navigation.goBack();
       return true;
     });
@@ -38,30 +37,29 @@ const OtpScreen = ({ navigation }: OtpScreenProps) => {
     return () => backHandler.remove();
   }, [navigation]);
 
-  const handleOtpChange = (value: string, index: number) => {
-    // Only allow numeric input
-    const numericValue = value.replace(/[^0-9]/g, '');
-    setOtp(prevOtp => {
-      const updatedOtp = [...prevOtp];
-      updatedOtp[index] = numericValue;
-      return updatedOtp;
-    });
+  const handleOtpChange = (text: string, index: number) => {
+    const numericValue = text.replace(/[^0-9]/g, '');
+    const newOtp = [...otp];
+    newOtp[index] = numericValue;
+    setOtp(newOtp);
 
     // Move to next input if value is entered
-    if (numericValue && index < 3 && inputRefs.current[index + 1]) {
+    if (numericValue && index < 5 && inputRefs.current[index + 1]) {
       inputRefs.current[index + 1]?.focus();
     }
   };
-  const handleKeyPress = (e: any, index: number) => {
-    if (e.nativeEvent.key === 'Backspace') {
-      const newOtp = [...otp];
-      newOtp[index] = '';
-      setOtp(newOtp);
-      
-      if (index > 0) {
-        inputRefs.current[index - 1]?.focus();
-      }
+
+  const handleVerifyOtp = () => {
+    const otpString = otp.join('');
+    if (otpString.length !== 6) {
+      Alert.alert(
+        translations.error[language],
+        translations.invalidOtp[language]
+      );
+      return;
     }
+    // TODO: Implement OTP verification
+    navigation.navigate('Dashboard');
   };
 
   return (
@@ -89,42 +87,43 @@ const OtpScreen = ({ navigation }: OtpScreenProps) => {
 
       {/* OTP Text */}
       <Text style={styles.otpMessage}>
-        OTP has been sent to you on your mobile phone.
+        {translations.otpSent[language]} {phoneNumber}
       </Text>
       <Text style={styles.otpSubMessage}>
-        Please enter it below
+        {translations.enterOtp[language]}
       </Text>
 
       {/* OTP Input */}
       <View style={styles.otpContainer}>
-        {[0, 1, 2, 3].map((index) => (
+        {[0, 1, 2, 3, 4, 5].map((index) => (
           <TextInput
             key={index}
             ref={(ref) => {
-              inputRefs.current[index] = ref;
+              if (ref) {
+                inputRefs.current[index] = ref;
+              }
             }}
             style={styles.otpInput}
-            maxLength={1}
             keyboardType="number-pad"
+            maxLength={1}
             value={otp[index]}
-            onChangeText={(value) => handleOtpChange(value, index)}
-            onKeyPress={(e) => handleKeyPress(e, index)}
+            onChangeText={(text) => handleOtpChange(text, index)}
           />
         ))}
       </View>
 
       {/* Verify Button */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.verifyButton}
-        onPress={() => navigation.navigate('Dashboard')}
+        onPress={handleVerifyOtp}
       >
-        <Text style={styles.verifyButtonText}>Verify</Text>
+        <Text style={styles.verifyButtonText}>{translations.verify[language]}</Text>
       </TouchableOpacity>
 
       {/* Resend OTP */}
       <TouchableOpacity style={styles.resendContainer}>
-        <Text style={styles.resendText}>Didn't receive OTP? </Text>
-        <Text style={styles.resendLink}>Resend</Text>
+        <Text style={styles.resendText}>{translations.didntReceiveOtp[language]} </Text>
+        <Text style={styles.resendLink}>{translations.resend[language]}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
