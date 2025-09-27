@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,21 +12,18 @@ import {
   Linking,
   Share,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import DashboardGridItem from '../components/DashboardGridItem';
-
-type RootStackParamList = {
-  Dashboard: undefined;
-  Login: undefined;
-  Profile: undefined;
-  ContactUs: undefined;
-  Issues: undefined;
-  LaborLaws: undefined;
-  Notifications: undefined;
-  ApplyIDCard: undefined;
-};
+import { RootStackParamList } from '../types/navigation';
+import NewsGrid from '../components/NewsGrid';
+import { fetchNews, readNotification } from '../services/api';
+import NewsHorizontalList from '../components/NewsHorizontalList';
+import { NewsItem } from '../types/news';
+import Header from '../components/Header';
 
 type DashboardScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Dashboard'>;
@@ -36,11 +33,17 @@ const { width } = Dimensions.get('window');
 
 const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
   const { language, setLanguage, translations } = useLanguage();
+  const { logout, userData, setNeedsRegistration } = useAuth();
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [page, setPage] = useState(1);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
   const menuItems = [
     {
       id: 1,
-      title: translations.contactUs[language],
+      title: translations.contactUsMenu[language],
       icon: require('../../assets/phone.png'),
       onPress: () => navigation.navigate('ContactUs'),
     },
@@ -67,25 +70,25 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
   const socialHandles = [
     {
       id: 1,
-      title: 'Facebook',
+      title: language === 'mr' ? 'फेसबुक' : 'Facebook',
       icon: require('../../assets/ic_facebook.png'),
       url: 'https://m.facebook.com/Marathikamgarsena/',
     },
     {
       id: 2,
-      title: 'Instagram',
+      title: language === 'mr' ? 'इंस्टाग्राम' : 'Instagram',
       icon: require('../../assets/ic_instagram.png'),
       url: 'https://www.instagram.com/marathikamgarsena?igsh=d3g0YjVneWt1ZzZr',
     },
     {
       id: 3,
-      title: 'Youtube',
+      title: language === 'mr' ? 'युट्यूब' : 'Youtube',
       icon: require('../../assets/ic_youtube.png'),
       url: 'https://youtube.com/@marathikamgarsena?si=R0TIVw2Njdwo_w_W',
     },
     {
       id: 4,
-      title: 'Twitter',
+      title: language === 'mr' ? 'ट्विटर' : 'Twitter',
       icon: require('../../assets/ic_twitter.png'),
       url: 'https://x.com/MarathiSena?t=23Dr208jA9gEhyUOdPS1AQ&s=09',
     },
@@ -149,51 +152,99 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Error during logout:', error);
+      Alert.alert(
+        translations.error[language],
+        translations.somethingWentWrong[language]
+      );
+    }
+  };
+
+  const loadNews = async (pageNum: number, refresh = false) => {
+    if (loading || (!hasMore && !refresh)) return;
+
+    try {
+      setLoading(true);
+      const response = await fetchNews(pageNum);
+      
+      if (response.success) {
+        if (refresh || pageNum === 1) {
+          setNews(response.data);
+        } else {
+          setNews(prev => [...prev, ...response.data]);
+        }
+        setHasMore(response.data.length > 0);
+      } else {
+        setHasMore(false);  
+      }
+    } catch (error: any) {
+      console.error('Error loading news:', error);
+      setHasMore(false);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    loadNews(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (userData && !userData.uniqueId) {
+      setNeedsRegistration(true);
+      navigation.replace('Registration', {
+        phoneNumber: userData.mobileNumber,
+        token: userData.token,
+      });
+    }
+  }, [userData, setNeedsRegistration, navigation]);
+
+  const handleLoadMore = () => {
+    if (!loading && hasMore) {
+      setPage(prev => prev + 1);
+      loadNews(page + 1);
+    }
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    setPage(1);
+    loadNews(1, true);
+  };
+
+  const handleViewAllNews = () => {
+    navigation.navigate('News');
+  };
+
+  const handleNotificationClick = async (notificationId: number) => {
+    if (!userData?.token) return;
+    
+    try {
+      await readNotification(notificationId, userData.token);
+      // Optionally refresh notifications list or update UI
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+    navigation.navigate('Notifications')
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={[styles.headerContainer, { height: 93 }]}>
-        <View style={styles.headerPattern}>
-          <Image 
-            source={require('../../assets/header_small.png')}
-            style={[styles.headerImage, { height: 100 }]}
-            resizeMode="cover"
-          />
-          <Text style={[styles.headerText, { fontSize: 17 }]}>Marathi Kamgar Sena</Text>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
-              <Image 
-                source={require('../../assets/bell.png')}
-                style={[styles.iconImage, { width: 20, height: 20 }]}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {
-              Alert.alert(
-                translations.logout[language],
-                translations.logoutConfirm[language],
-                [
-                  {
-                    text: translations.cancel[language],
-                    style: "cancel"
-                  },
-                  {
-                    text: translations.logout[language],
-                    onPress: () => {
-                      navigation.navigate('Login');
-                    }
-                  }
-                ]
-              );
-            }}>
-              <Image 
-                source={require('../../assets/logout.png')}
-                style={[styles.iconImage, { width: 20, height: 20 }]}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
+        <Header
+        title={language === 'mr' ? 'मराठी कामगार सेना' : 'Marathi Kamgar Sena'}
+        showBackButton={false}
+        onBackPress={() => navigation.goBack()}
+        showIcons={true}
+        onNotificationPress={() => handleNotificationClick(1)}
+        onLogoutPress={handleLogout}
+        titleStyleCenter={false}
+      />
       <ScrollView style={styles.content}>
         <Text style={styles.sectionTitle}>{translations.contactUs[language]}</Text>
         <View style={styles.menuGrid}>
@@ -216,29 +267,38 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
 
         <View style={styles.newsSection}>
           <View style={styles.newsTitleContainer}>
-            <Image 
+            <Image
               source={require('../../assets/ic_news.png')}
               style={styles.newsIcon}
             />
-            <Text style={styles.newsTitle}>{translations.news[language]}</Text>
+              <Text style={styles.newsTitle}>{translations.news[language]}</Text>
+            <TouchableOpacity onPress={handleViewAllNews}>
+              <Text style={styles.viewAll}>{language === 'mr' ? 'सर्व पाहणे' : 'View All'}</Text>
+            </TouchableOpacity>
           </View>
-          <View style={styles.newsContent}>
-            <Text style={styles.noDataText}>{translations.noData[language]}</Text>
-          </View>
+          {news.length === 0 ? (
+            <Text style={styles.noNewsText}>
+              {translations.noData[language]}
+            </Text>
+          ) : (
+            <NewsHorizontalList
+              news={news}
+              onViewAllPress={handleViewAllNews}
+            />
+          )}
         </View>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.profileSection}
           onPress={() => navigation.navigate('Profile')}
         >
-          <Image 
+          <Image
             source={require('../../assets/profile.png')}
             style={styles.profileIcon}
           />
           <Text style={styles.profileText}>{translations.profile[language]}</Text>
         </TouchableOpacity>
 
-        {/* Social Handles Section */}
         <Text style={[styles.sectionTitle, { marginTop: 30 }]}>{translations.socialHandles[language]}</Text>
         <View style={styles.menuGrid}>
           {socialHandles.map((item, index) => (
@@ -258,7 +318,6 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
           ))}
         </View>
 
-        {/* Other Section */}
         <Text style={[styles.sectionTitle, { marginTop: 10 }]}>{translations.other[language]}</Text>
         <View style={styles.menuGrid}>
           {otherOptions.map((item, index) => (
@@ -288,7 +347,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   headerContainer: {
-    backgroundColor: '#FF5722',
+    backgroundColor: '#ff5e00',
     paddingTop: 20,
     overflow: 'hidden',
   },
@@ -330,9 +389,9 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   sectionTitle: {
-    fontSize: 19,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#FF5722',
+    color: '#ff5e00',
     marginBottom: 13,
   },
   grid: {
@@ -360,13 +419,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#FF5722',
+    borderColor: '#ff5e00',
   },
   iconContainer: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#FF5722',
+    backgroundColor: '#ff5e00',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
@@ -377,39 +436,39 @@ const styles = StyleSheet.create({
     tintColor: '#fff',
   },
   menuText: {
-    fontSize: 15,
+    fontSize: 16,
     color: '#333',
     textAlign: 'center',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   newsSection: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#FF5722',
   },
   newsTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 8,
+    paddingHorizontal: 10,
+    justifyContent: 'space-between',
+   
   },
   newsIcon: {
     width: 24,
     height: 24,
     marginRight: 10,
-    tintColor: '#FF5722',
+    tintColor: '#ff5e00',
   },
   newsTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#ff5e00',
+    flex: 1,
   },
-  newsContent: {
-    height: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
+  viewAll: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: 'bold',
+    marginLeft: 16,
   },
   noDataText: {
     color: '#999',
@@ -422,18 +481,24 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     borderWidth: 1,
-    borderColor: '#FF5722',
+    borderColor: '#ff5e00',
   },
   profileIcon: {
     width: 30,
     height: 30,
     marginRight: 10,
-    tintColor: '#FF5722',
+    tintColor: '#ff5e00',
   },
   profileText: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
+  },
+  noNewsText: {
+    color: '#999',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
   },
 });
 

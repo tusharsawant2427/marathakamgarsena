@@ -7,6 +7,8 @@ import {
   Image,
   ImageSourcePropType,
   Dimensions,
+  StatusBar,
+  Platform,
 } from 'react-native';
 
 type HeaderProps = {
@@ -17,6 +19,7 @@ type HeaderProps = {
   onNotificationPress?: () => void;
   onLogoutPress?: () => void;
   rightComponent?: React.ReactNode;
+  titleStyleCenter?: boolean,
 };
 
 const { width } = Dimensions.get('window');
@@ -25,22 +28,27 @@ const Header = ({
   title,
   showBackButton = false,
   showIcons = false,
+  titleStyleCenter = true,
   onBackPress,
   onNotificationPress,
   onLogoutPress,
   rightComponent,
 }: HeaderProps) => {
+  const statusBarHeight = Platform.OS === 'ios' ? 20 : (StatusBar.currentHeight || 0) <= 42 ? 20 : StatusBar.currentHeight || 0;
+  const headerHeight = 60 + statusBarHeight;
   return (
-    <View style={[styles.headerContainer, { height: 93 }]}>
-      <View style={styles.headerPattern}>
+    <View style={[styles.headerContainer, { height: headerHeight }]}>
+      <StatusBar backgroundColor="#ff5e00" barStyle="light-content" />
+      <View style={[styles.headerPattern, { height: headerHeight }]}>
         <Image 
           source={require('../../assets/header_small.png')}
-          style={[styles.headerImage]}
+          style={[styles.headerImage, { height: headerHeight }]}
           resizeMode="cover"
         />
-        <View style={styles.headerContent}>
-          {showBackButton ? (
-            <View style={styles.titleWithBack}>
+        <View style={[styles.headerContent, { marginTop: statusBarHeight }]}>
+        {titleStyleCenter && (
+          <View style={styles.leftSection}>
+            {showBackButton && (
               <TouchableOpacity 
                 style={styles.backButton}
                 onPress={onBackPress}
@@ -50,33 +58,35 @@ const Header = ({
                   style={[styles.backIcon, { width: 20, height: 20 }]}
                 />
               </TouchableOpacity>
-              <Text style={[styles.headerText, { fontSize: 17, marginLeft: 16 }]}>
-                {title}
-              </Text>
-            </View>
-          ) : (
-            <Text style={[styles.headerText, { fontSize: 17 }]}>
+            )}
+          </View>
+           )}
+
+          <View style={styles.titleContainer}>
+            <Text style={[styles.headerText, { fontSize: 23 }]}>
               {title}
             </Text>
-          )}
-          
-          {showIcons && (
-            <View style={[styles.headerIcons]}>
-              <TouchableOpacity onPress={onNotificationPress}>
-                <Image 
-                  source={require('../../assets/bell.png')}
-                  style={[styles.iconImage, { width: 20, height: 20 }]}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={onLogoutPress}>
-                <Image 
-                  source={require('../../assets/logout.png')}
-                  style={[styles.iconImage, { width: 20, height: 20 }]}
-                />
-              </TouchableOpacity>
-            </View>
-          )}
-          {rightComponent}
+          </View>
+
+          <View style={styles.rightSection}>
+            {showIcons && (
+              <View style={[styles.headerIcons]}>
+                <TouchableOpacity onPress={onNotificationPress}>
+                  <Image 
+                    source={require('../../assets/bell.png')}
+                    style={[styles.iconImage, { width: 20, height: 20 }]}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={onLogoutPress}>
+                  <Image 
+                    source={require('../../assets/logout.png')}
+                    style={[styles.iconImage, { width: 20, height: 20 }]}
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
+            {rightComponent}
+          </View>
         </View>
       </View>
     </View>
@@ -85,49 +95,59 @@ const Header = ({
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: '#FF5722',
-    paddingTop: 20,
+    backgroundColor: '#ff5e00',
+    width: '100%',
     overflow: 'hidden',
   },
   headerPattern: {
-    width: width,
-    height: 73,
+    width: '100%',
+    position: 'relative',
   },
   headerImage: {
     position: 'absolute',
-    width: width,
-    height: 100,
-    top: -10,
+    width: '100%',
+    top: '18%',
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    height: '100%',
+    paddingHorizontal: 10,
+    width: '100%',
+    height: 40,
   },
-  titleWithBack: {
-    flexDirection: 'row',
+  leftSection: {
+    width: 40,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
+  rightSection: {
+    width: 40,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  titleContainer: {
+    flex: 0,
     alignItems: 'center',
-    flex: 1,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  backIcon: {
-    tintColor: '#fff',
+    justifyContent: 'center',
+    verticalAlign: 'middle'
   },
   headerText: {
     color: '#fff',
     fontWeight: 'bold',
-    flex: 1,
     textAlign: 'center',
+  },
+  backButton: {
+    padding: 8,
+    marginLeft: -5,
+  },
+  backIcon: {
+    tintColor: '#fff',
   },
   headerIcons: {
     flexDirection: 'row',
     gap: 16,
+    alignItems: 'center',
   },
   iconImage: {
     tintColor: '#fff',

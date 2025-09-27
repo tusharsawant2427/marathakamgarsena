@@ -5,7 +5,12 @@ export type RootStackParamList = {
   OtpScreen: {
     phoneNumber: string;
   };
+  Registration: {
+    phoneNumber?: string;
+    token?: string;
+  };
   Dashboard: undefined;
+  News: undefined;
   ContactUs: undefined;
   Issues: undefined;
   AddIssue: undefined;
@@ -18,6 +23,23 @@ export type RootStackParamList = {
   Profile: undefined;
   EditProfile: undefined;
   ApplyIDCard: undefined;
+  NewsDetail: {
+    news: {
+      id: number;
+      name: string;
+      doc_name: string;
+      content: string;
+      file_name: string;
+      doc_url?: string;
+      news_link?: string;
+      language: string;
+      is_active: number;
+      addedby: number;
+      created_at: string;
+      updated_at: string;
+    };
+  };
+  ImageViewer: { imageUrl: string; title: string };
 };
 
 export type NavigationProp = NativeStackNavigationProp<RootStackParamList>; 

@@ -1,0 +1,93 @@
+{
+  "project_info": {
+    "project_number": "649243927850",
+    "firebase_url": "https://marathi-kamgar-sena.firebaseio.com",
+    "project_id": "marathi-kamgar-sena",
+    "storage_bucket": "marathi-kamgar-sena.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:649243927850:android:dbaef3fa0232f4a339aa53",
+        "android_client_info": {
+          "package_name": "comm.mks.in"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "649243927850-sd6erc027jq75gd4f2v61em7u88k5sb9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "comm.mks.in",
+            "certificate_hash": "b7fa94bf90c229c4ea2841ec08b1c9a455427d88"
+          }
+        },
+        {
+          "client_id": "649243927850-792q1i53o565r61u9tnl8kdfq7inpatt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "comm.mks.in",
+            "certificate_hash": "409b56fade6f48e19636d1eb628f195b8a90f9a8"
+          }
+        },
+        {
+          "client_id": "649243927850-6091sulqg0105ghcl0m0s9anqoikmp7o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCDUWuzQiI79tmYo2_jufgKD_qT2zaFBJw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "649243927850-6091sulqg0105ghcl0m0s9anqoikmp7o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:649243927850:android:c0f6802fdae79c9239aa53",
+        "android_client_info": {
+          "package_name": "comm.mks.india"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "649243927850-g6l8ult1oghc9la4fscobqsrhtbrio6r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "comm.mks.india",
+            "certificate_hash": "6c3bfead5821c41d26a2d6999cf977eaf9d54d13"
+          }
+        },
+        {
+          "client_id": "649243927850-6091sulqg0105ghcl0m0s9anqoikmp7o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCDUWuzQiI79tmYo2_jufgKD_qT2zaFBJw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "649243927850-6091sulqg0105ghcl0m0s9anqoikmp7o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -10,10 +10,16 @@ import {
   SafeAreaView,
   BackHandler,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
 import { RootStackParamList, NavigationProp } from '../types/navigation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../context/AuthContext';
+import { getFCMToken } from '../config/firebase';
+import Header from '../components/Header';
+import DeviceInfo from 'react-native-device-info';
 
 type OtpScreenRouteProp = RouteProp<RootStackParamList, 'OtpScreen'>;
 
@@ -23,13 +29,15 @@ const OtpScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<OtpScreenRouteProp>();
   const { language, translations } = useLanguage();
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const { login } = useAuth();
+  const [otp, setOtp] = useState(['', '', '', '']);
+  const [loading, setLoading] = useState(false);
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const phoneNumber = route.params.phoneNumber;
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      setOtp(['', '', '', '', '', '']);
+      setOtp(['', '', '', '']);
       navigation.goBack();
       return true;
     });
@@ -37,44 +45,111 @@ const OtpScreen = () => {
     return () => backHandler.remove();
   }, [navigation]);
 
+
   const handleOtpChange = (text: string, index: number) => {
     const numericValue = text.replace(/[^0-9]/g, '');
+  
+    // If user pastes multiple digits (like 1234)
+    if (numericValue.length > 1) {
+      const digits = numericValue.split('').slice(0, 4);
+      const newOtp = ['', '', '', ''];
+      digits.forEach((digit, i) => {
+        newOtp[i] = digit;
+      });
+      setOtp(newOtp);
+      const nextIndex = digits.length === 4 ? 3 : digits.length;
+      inputRefs.current[nextIndex]?.focus();
+      return;
+    }
+  
+    // Replace current digit with typed value
     const newOtp = [...otp];
     newOtp[index] = numericValue;
     setOtp(newOtp);
-
-    // Move to next input if value is entered
-    if (numericValue && index < 5 && inputRefs.current[index + 1]) {
+  
+    // Move focus to next if input is filled
+    if (numericValue.length === 1 && index < 3) {
       inputRefs.current[index + 1]?.focus();
     }
   };
+  
 
-  const handleVerifyOtp = () => {
+  const handleVerifyOtp = async () => {
     const otpString = otp.join('');
-    if (otpString.length !== 6) {
+    if (otpString.length !== 4) {
       Alert.alert(
         translations.error[language],
         translations.invalidOtp[language]
       );
       return;
     }
-    // TODO: Implement OTP verification
-    navigation.navigate('Dashboard');
+
+    try {
+      setLoading(true);
+      const fcmToken = await getFCMToken();
+
+      const response = await fetch('https://marathikamgarsena.com/api/verify-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'KAMGARUNION_API_KEY'
+        },
+        body: JSON.stringify({
+          mobile_number: phoneNumber,
+          otp: otpString,
+          fcm_token: fcmToken || ''
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Store user data and token for future use
+        const userData = {
+          id: data.data.id,
+          uniqueId: data.data.unique_id,
+          name: data.data.name,
+          email: data.data.email,
+          mobileNumber: data.data.mobile_number,
+          company: data.data.company,
+          designation: data.data.designation,
+          profileImage: data.data.user_profile,
+          isPremium: data.data.is_premium,
+          token: data.data.token,
+          expiryDate: data.data.expiry_date || "",
+          location: data.data.location || ""
+        };
+        await login(userData);
+
+        // Let the authentication state change handle navigation automatically
+        // The AppNavigator will automatically show the appropriate screen based on auth state
+        // No need for manual navigation or delays
+      } else {
+        Alert.alert(
+          translations.error[language],
+          data.message || translations.invalidOtp[language]
+        );
+      }
+    } catch (error) {
+      Alert.alert(
+        translations.error[language],
+        translations.somethingWentWrong[language]
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={[styles.headerContainer, { height: 85 }]}>
-        <View style={styles.headerPattern}>
-          <Image 
-            source={require('../../assets/header_small.png')}
-            style={[styles.headerImage, { height: 90 }]}
-            resizeMode="cover"
-          />
-          <Text style={[styles.headerText, { fontSize: 24 }]}>VERIFICATION</Text>
-        </View>
-      </View>
+      <Header
+        title={language === 'mr' ? 'पडताळणी' : 'Verification'}
+        showBackButton={false}
+        onBackPress={() => navigation.goBack()}
+        showIcons={false}
+      />
+
 
       {/* Banner Image */}
       <View style={[styles.bannerContainer, { height: 220 }]}>
@@ -95,7 +170,7 @@ const OtpScreen = () => {
 
       {/* OTP Input */}
       <View style={styles.otpContainer}>
-        {[0, 1, 2, 3, 4, 5].map((index) => (
+        {[0, 1, 2, 3].map((index) => (
           <TextInput
             key={index}
             ref={(ref) => {
@@ -108,22 +183,38 @@ const OtpScreen = () => {
             maxLength={1}
             value={otp[index]}
             onChangeText={(text) => handleOtpChange(text, index)}
+            onFocus={() => {
+              if (otp[index] !== '') {
+                // select the existing text so user can overwrite
+                inputRefs.current[index]?.setNativeProps({ selection: { start: 0, end: 1 } });
+              }
+            }}
+            onKeyPress={(e) => {
+              if (e.nativeEvent.key === 'Backspace') {
+                if (otp[index] === '' && index > 0) {
+                  inputRefs.current[index - 1]?.focus();
+                }
+              }
+            }}
           />
         ))}
       </View>
 
+
       {/* Verify Button */}
       <TouchableOpacity
-        style={styles.verifyButton}
+        style={[
+          styles.verifyButton,
+          loading && styles.verifyButtonDisabled
+        ]}
         onPress={handleVerifyOtp}
+        disabled={loading}
       >
-        <Text style={styles.verifyButtonText}>{translations.verify[language]}</Text>
-      </TouchableOpacity>
-
-      {/* Resend OTP */}
-      <TouchableOpacity style={styles.resendContainer}>
-        <Text style={styles.resendText}>{translations.didntReceiveOtp[language]} </Text>
-        <Text style={styles.resendLink}>{translations.resend[language]}</Text>
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.verifyButtonText}>{translations.verify[language]}</Text>
+        )}
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -135,7 +226,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   headerContainer: {
-    backgroundColor: '#FF5722',
+    backgroundColor: '#ff5e00',
     paddingTop: 20,
     overflow: 'hidden',
   },
@@ -197,14 +288,14 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderBottomWidth: 2,
-    borderBottomColor: '#FF5722',
+    borderBottomColor: '#ff5e00',
     fontSize: 24,
     textAlign: 'center',
     marginHorizontal: 10,
     color: '#333',
   },
   verifyButton: {
-    backgroundColor: '#FF5722',
+    backgroundColor: '#ff5e00',
     marginHorizontal: 40,
     paddingVertical: 15,
     borderRadius: 25,
@@ -228,8 +319,11 @@ const styles = StyleSheet.create({
   },
   resendLink: {
     fontSize: 16,
-    color: '#FF5722',
+    color: '#ff5e00',
     fontWeight: 'bold',
+  },
+  verifyButtonDisabled: {
+    opacity: 0.7,
   },
 });
 

@@ -1,56 +1,39 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Header from '../components/Header';
 import { NavigationProp } from '../types/navigation';
-
-const laborLaws = [
-  {
-    id: '1',
-    title: 'Providing Priority in employment to minimum local persons in all Micro, Small, Medium, Large & Mega Industrial Enterprises.',
-    subtitle: 'Providing Priority in employment to minimum 80 local persons in all Micro.',
-    pdfUrl: 'https://marathikamgarsena.com/storage/act_rules/1701074275.pdf'
-  },
-  {
-    id: '2',
-    title: 'The Factories Act, 1948',
-    subtitle: 'The Factories Act, 1948',
-    pdfUrl: 'https://marathikamgarsena.com/storage/act_rules/1701074275.pdf'
-  },
-  {
-    id: '3',
-    title: 'The Minimum Wages Act, 1948',
-    subtitle: 'The Minimum Wages Act, 1948',
-    pdfUrl: 'https://marathikamgarsena.com/storage/act_rules/1701074275.pdf'
-  },
-  {
-    id: '4',
-    title: '74The Industrial Disputes Act, 1947',
-    subtitle: '74The Industrial Disputes Act, 1947',
-    pdfUrl: 'https://marathikamgarsena.com/storage/act_rules/1701074275.pdf'
-  },
-  {
-    id: '5',
-    title: 'The Employers Liability Act, 1938 (repealed by Act No.23 of 2016)',
-    subtitle: 'The Employers Liability Act, 1938 (repealed by Act No.23 of 2016)',
-    pdfUrl: 'https://marathikamgarsena.com/storage/act_rules/1701074275.pdf'
-  },
-  {
-    id: '6',
-    title: 'The Workmen Compensation Act, 1923',
-    subtitle: 'The Workmen Compensation Act, 1923',
-    pdfUrl: 'https://marathikamgarsena.com/storage/act_rules/1701074275.pdf'
-  },
-  {
-    id: '7',
-    title: 'The Child Labour (Prohibition and Regulation) Act, 1986',
-    subtitle: 'The Child Labour (Prohibition and Regulation) Act, 1986',
-    pdfUrl: 'https://marathikamgarsena.com/storage/act_rules/1701074275.pdf'
-  }
-];
+import { actRulesService, ActRule } from '../services/actRulesService';
+import { ApiError } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const LaborLawsScreen = () => {
   const navigation = useNavigation<NavigationProp>();
+  const { userData } = useAuth();
+  const { language } = useLanguage();
+  const [actRules, setActRules] = useState<ActRule[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetchActRules();
+  }, []);
+
+  const fetchActRules = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await actRulesService.getActRules();
+      setActRules(response.data);
+    } catch (err) {
+      const error = err as ApiError;
+      setError(error.message || 'Failed to fetch labor laws');
+      console.error('Error fetching labor laws:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePdfPress = (pdfUrl: string, title: string) => {
     navigation.navigate('PdfViewer', {
@@ -61,32 +44,46 @@ const LaborLawsScreen = () => {
 
   return (
     <View style={styles.container}>
-        <Header
-        title="Labour Laws"
+      <Header
+        title={language === 'mr' ? 'कामगार कायदे' : 'Labour Laws'}
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
         showIcons={false}
       />
       
-      <ScrollView style={styles.scrollView}>
-        {laborLaws.map((law) => (
-          <View key={law.id} style={styles.lawCard}>
-            <View style={styles.lawContent}>
-              <Text style={styles.lawTitle}>{law.title}</Text>
-              <Text style={styles.lawSubtitle}>{law.subtitle}</Text>
-            </View>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#ff5e00" />
+        </View>
+      ) : error ? (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={fetchActRules}>
+            <Text style={styles.retryButtonText}>{language === 'mr' ? 'पुन्हा प्रयत्न करा' : 'Retry'}</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <ScrollView style={styles.scrollView}>
+          {actRules.map((law) => (
             <TouchableOpacity 
-              style={styles.pdfIcon}
-              onPress={() => handlePdfPress(law.pdfUrl, law.title)}
+              key={law.id} 
+              style={styles.lawCard}
+              onPress={() => handlePdfPress(law.file_name, language === 'mr' ? 'कामगार कायदे' : 'Labour Laws')}
             >
-              <Image 
-                source={require('../../assets/pdf-icon.png')}
-                style={styles.pdfImage}
-              />
+              <View style={styles.lawContent}>
+                <Text style={styles.lawTitle}>{law.name}</Text>
+                <Text style={styles.lawSubtitle}>{law.description}</Text>
+              </View>
+              <View style={styles.pdfIcon}>
+                <Image 
+                  source={require('../../assets/pdf-icon.png')}
+                  style={styles.pdfImage}
+                />
+              </View>
             </TouchableOpacity>
-          </View>
-        ))}
-      </ScrollView>
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 };
@@ -96,24 +93,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  header: {
-    flexDirection: 'row',
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#FF5722',
-    height: 60,
   },
-  backButton: {
-    marginRight: 16,
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
-  backButtonText: {
-    fontSize: 24,
+  errorText: {
+    color: '#FF0000',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#ff5e00',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  retryButtonText: {
     color: '#fff',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontSize: 16,
   },
   scrollView: {
     flex: 1,
