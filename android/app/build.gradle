@@ -85,6 +85,10 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 71
         versionName "4.1.2"
+        
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+        }
     }
     signingConfigs {
         debug {
@@ -110,6 +114,13 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+    
+    // 16 KB page size support configuration
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging false  // Use uncompressed libraries with AGP 8.5.1+
+        }
+    }
     configurations.all {
         resolutionStrategy {
             force 'androidx.core:core:1.13.1'
@@ -131,6 +142,9 @@ dependencies {
         implementation jscFlavor
     }
     implementation "androidx.core:core:1.13.1"
+    
+    // Google Play Billing Library - latest version
+    implementation 'com.android.billingclient:billing:7.1.1'
     
     // Exclude the old support library
     configurations.all {
