@@ -11,6 +11,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Header from '../components/Header';
 import { RootStackParamList } from '../types/navigation';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 type ProfileScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Profile'>;
@@ -18,14 +19,16 @@ type ProfileScreenProps = {
 
 const ProfileScreen = ({ navigation }: ProfileScreenProps) => {
   const { language, translations } = useLanguage();
+  const { userData } = useAuth();
 
   const profileData = {
-    name: 'Tushar',
-    mobileNumber: '7977796967',
-    emailAddress: 'tusharsawant242726@gmail.com',
-    companyName: 'Target',
-    designation: 'developer',
-    registrationNumber: 'MKS-1068',
+    name: userData?.name || '',
+    mobileNumber: userData?.mobileNumber || '',
+    emailAddress: userData?.email || '',
+    companyName: userData?.company || '',
+    designation: userData?.designation || '',
+    registrationNumber: userData?.uniqueId || '',
+    location: userData?.location || '',
   };
 
   const EditButton = () => (
@@ -53,8 +56,10 @@ const ProfileScreen = ({ navigation }: ProfileScreenProps) => {
       <View style={styles.content}>
         <View style={styles.profileImageContainer}>
           <Image
-            source={require('../../assets/profile.png')}
+            source={userData?.profileImage ? { uri: userData.profileImage } : require('../../assets/profile.png')}
             style={styles.profileImage}
+            resizeMode="cover"
+            defaultSource={require('../../assets/profile.png')}
           />
           <Text style={styles.profileName}>{profileData.name}</Text>
         </View>
@@ -109,6 +114,18 @@ const ProfileScreen = ({ navigation }: ProfileScreenProps) => {
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>{translations.profileDesignation[language]}</Text>
               <Text style={styles.infoValue}>{profileData.designation}</Text>
+            </View>
+          </View>
+          <View style={styles.infoRow}>
+            <View style={styles.iconContainer}>
+              <Image
+                source={require('../../assets/home-address.png')}
+                style={styles.icon}
+              />
+            </View>
+            <View style={styles.infoContent}>
+              <Text style={styles.infoLabel}>{translations.profileAddress[language]}</Text>
+              <Text style={styles.infoValue}>{profileData.location}</Text>
             </View>
           </View>
 

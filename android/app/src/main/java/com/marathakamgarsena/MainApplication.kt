@@ -1,4 +1,4 @@
-package com.marathakamgarsena
+package comm.mks.india
 
 import android.app.Application
 import com.facebook.react.PackageList

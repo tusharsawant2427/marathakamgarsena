@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,9 +7,13 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Header from '../components/Header';
+import { useAuth } from '../context/AuthContext';
+import { fetchNotifications } from '../services/api';
 
 type RootStackParamList = {
   Dashboard: undefined;
@@ -21,28 +25,52 @@ type NotificationsScreenProps = {
 };
 
 const NotificationsScreen = ({ navigation }: NotificationsScreenProps) => {
-  const notifications = [
-    {
-      id: '1',
-      title: '8369519408',
-      message: 'जय महाराष्ट्र - आपले अॅप अपडेट करा ! व जास्तीत जास्त लोकांपर्यंत अॅप शेअर करा',
-    },
-    {
-      id: '2',
-      title: 'संपर्क साधा 8369519408',
-      message: 'कामगार किंवा कर्मचारी म्हणुन आपल्याला काही अडचण असेल तर मराठी कामगार सेनेशी संपर्क साधा.',
-    },
-    {
-      id: '3',
-      title: 'संपर्क साधा',
-      message: 'कामगार किंवा कर्मचारी म्हणुन आपल्याला काही अडचण असेल तर मराठी कामगार सेनेशी संपर्क साधा 8369519408',
-    },
-    {
-      id: '4',
-      title: 'NEW NEWS',
-      message: 'News: आता मनुचे ते टास्क्स बना ऑनलाइन प्रणाली द्वारे !',
-    },
-  ];
+  const { userData, login } = useAuth();
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
+  const loadNotifications = async (pageNum: number, refresh = false) => {
+    if (loading || (!hasMore && !refresh) || !userData.token) return;
+
+    try {
+      setLoading(true);
+      const response = await fetchNotifications(pageNum, userData.token);
+      
+      if (response.success) {
+        if (refresh || pageNum === 1) {
+          setNotifications(response.data.notifications);
+        } else {
+          setNotifications(prev => [...prev, ...response.data.notifications]);
+        }
+        setHasMore(response.data.notifications.length > 0);
+      }
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    loadNotifications(1);
+  }, []);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    setPage(1);
+    loadNotifications(1, true);
+  };
+
+  const handleLoadMore = () => {
+    if (!loading && hasMore) {
+      setPage(prev => prev + 1);
+      loadNotifications(page + 1);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -54,8 +82,23 @@ const NotificationsScreen = ({ navigation }: NotificationsScreenProps) => {
         showIcons={false}
       />
 
-
-      <ScrollView style={styles.content}>
+      <ScrollView 
+        style={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
+        onScroll={({ nativeEvent }) => {
+          const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+          const paddingToBottom = 20;
+          const isCloseToBottom = layoutMeasurement.height + contentOffset.y >=
+            contentSize.height - paddingToBottom;
+          
+          if (isCloseToBottom && !loading && hasMore) {
+            handleLoadMore();
+          }
+        }}
+        scrollEventThrottle={400}
+      >
         {notifications.map((notification) => (
           <View key={notification.id} style={styles.notificationCard}>
             <View style={styles.bellIconContainer}>
@@ -65,11 +108,17 @@ const NotificationsScreen = ({ navigation }: NotificationsScreenProps) => {
               />
             </View>
             <View style={styles.notificationContent}>
-              <Text style={styles.notificationTitle}>{notification.title}</Text>
-              <Text style={styles.notificationMessage}>{notification.message}</Text>
+              <Text style={styles.notificationTitle}>{notification.name}</Text>
+              <Text style={styles.notificationMessage}>{notification.description}</Text>
+              <Text style={styles.notificationDate}>
+                {new Date(notification.created_at).toLocaleDateString()}
+              </Text>
             </View>
           </View>
         ))}
+        {loading && !refreshing && (
+          <ActivityIndicator size="large" color="#FF4E0E" style={styles.loader} />
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -148,6 +197,14 @@ const styles = StyleSheet.create({
   notificationMessage: {
     fontSize: 14,
     color: '#666',
+    marginBottom: 4,
+  },
+  notificationDate: {
+    fontSize: 12,
+    color: '#999',
+  },
+  loader: {
+    marginVertical: 16,
   },
 });
 

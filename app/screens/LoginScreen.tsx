@@ -9,11 +9,16 @@ import {
   Dimensions,
   SafeAreaView,
   Alert,
+  ActivityIndicator,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
 import { NavigationProp } from '../types/navigation';
 import { Language } from '../types/language';
+import Header from '../components/Header';
 
 const { width } = Dimensions.get('window');
 
@@ -21,8 +26,9 @@ const LoginScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const { language, translations, setLanguage } = useLanguage();
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (phoneNumber.length !== 10) {
       Alert.alert(
         translations.error[language],
@@ -30,91 +36,130 @@ const LoginScreen = () => {
       );
       return;
     }
-    navigation.navigate('OtpScreen', { phoneNumber });
+
+    try {
+      setLoading(true);
+      const response = await fetch('https://marathikamgarsena.com/api/send-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'KAMGARUNION_API_KEY'
+        },
+        body: JSON.stringify({
+          mobile_number: phoneNumber
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        navigation.navigate('OtpScreen', { phoneNumber });
+      } else {
+        Alert.alert(
+          translations.error[language],
+          data.message || translations.somethingWentWrong[language]
+        );
+      }
+    } catch (error) {
+      Alert.alert(
+        translations.error[language],
+        translations.somethingWentWrong[language]
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Welcome Text */}
-      <View style={[styles.headerContainer, { height: 85 }]}>
-        <View style={styles.headerPattern}>
-          <Image 
-            source={require('../../assets/header_small.png')}
-            style={[styles.headerImage, { height: 90 }]}
-            resizeMode="cover"
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <SafeAreaView style={styles.container}>
+          {/* Welcome Text */}
+          <Header
+            title={translations.welcome[language]}
+            showBackButton={false}
+            onBackPress={() => navigation.goBack()}
+            showIcons={false}
+            titleStyleCenter={true}
           />
-          <Text style={[styles.welcomeText, { fontSize: 24 }]}>Welcome !</Text>
-        </View>
-      </View>
 
-      {/* Banner Image */}
-      <View style={[styles.bannerContainer, { height: 220 }]}>
-        <Image
-          source={require('../../assets/banner.jpg')}
-          style={[styles.bannerImage, { height: 220 }]}
-          resizeMode="cover"
-        />
-      </View>
+          {/* Banner Image */}
+          <View style={[styles.bannerContainer, { height: 220 }]}>
+            <Image
+              source={require('../../assets/banner.jpg')}
+              style={[styles.bannerImage, { height: 220 }]}
+              resizeMode="cover"
+            />
+          </View>
 
-      {/* Verify Text */}
-      <Text style={styles.verifyTitle}>Verify Your Number</Text>
-      <Text style={styles.verifySubtitle}>
-        Please enter your mobile number to receive a verification code.
-      </Text>
+          {/* Verify Text */}
+          <Text style={styles.verifyTitle}>{translations.verifyTitle[language]}</Text>
+          <Text style={styles.verifySubtitle}>
+            {translations.verifySubtitle[language]}
+          </Text>
 
-      {/* Language Selection */}
-      <View style={styles.languageContainer}>
-        <TouchableOpacity
-          style={[
-            styles.languageButton,
-            language === 'mr' && styles.selectedLanguage,
-          ]}
-          onPress={() => setLanguage('mr')}>
-          <Text style={[
-            styles.languageText,
-            language === 'mr' && styles.selectedLanguageText
-          ]}>मराठी</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.languageButton,
-            language === 'en' && styles.selectedLanguage,
-          ]}
-          onPress={() => setLanguage('en')}>
-          <Text style={[
-            styles.languageText,
-            language === 'en' && styles.selectedLanguageText
-          ]}>English</Text>
-        </TouchableOpacity>
-      </View>
+          {/* Language Selection */}
+          <View style={styles.languageContainer}>
+            <TouchableOpacity
+              style={[
+                styles.languageButton,
+                language === 'mr' && styles.selectedLanguage,
+              ]}
+              onPress={() => setLanguage('mr')}>
+              <Text style={[
+                styles.languageText,
+                language === 'mr' && styles.selectedLanguageText
+              ]}>मराठी</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.languageButton,
+                language === 'en' && styles.selectedLanguage,
+              ]}
+              onPress={() => setLanguage('en')}>
+              <Text style={[
+                styles.languageText,
+                language === 'en' && styles.selectedLanguageText
+              ]}>English</Text>
+            </TouchableOpacity>
+          </View>
 
-      {/* Phone Number Input */}
-      <View style={styles.inputContainer}>
-        <View style={styles.countryCode}>
-          <Text style={styles.countryCodeText}>+91</Text>
-        </View>
-        <TextInput
-          style={styles.input}
-          placeholder="Mobile Number"
-          keyboardType="phone-pad"
-          value={phoneNumber}
-          onChangeText={setPhoneNumber}
-          maxLength={10}
-        />
-      </View>
+          {/* Phone Number Input */}
+          <View style={styles.inputContainer}>
+            <View style={styles.countryCode}>
+              <Text style={styles.countryCodeText}>+91</Text>
+            </View>
+            <TextInput
+              style={styles.input}
+              placeholder={translations.mobileNumber[language]}
+              keyboardType="phone-pad"
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+              maxLength={10}
+            />
+          </View>
 
-      {/* Continue Button */}
-      <TouchableOpacity 
-        style={[
-          styles.continueButton,
-          phoneNumber.length !== 10 && styles.continueButtonDisabled
-        ]}
-        onPress={handleLogin}
-        disabled={phoneNumber.length !== 10}
-      >
-        <Text style={styles.continueButtonText}>Continue</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+          {/* Continue Button */}
+          <TouchableOpacity 
+            style={[
+              styles.continueButton,
+              (phoneNumber.length !== 10 || loading) && styles.continueButtonDisabled
+            ]}
+            onPress={handleLogin}
+            disabled={phoneNumber.length !== 10 || loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.continueButtonText}>{translations.continue[language]}</Text>
+            )}
+          </TouchableOpacity>
+        </SafeAreaView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -124,7 +169,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   headerContainer: {
-    backgroundColor: '#FF5722',
+    backgroundColor: '#ff5e00',
     paddingTop: 20,
     overflow: 'hidden',
   },
@@ -186,14 +231,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     borderRadius: 25,
     borderWidth: 1,
-    borderColor: '#FF5722',
+    borderColor: '#ff5e00',
     marginHorizontal: 5,
   },
   selectedLanguage: {
-    backgroundColor: '#FF5722',
+    backgroundColor: '#ff5e00',
   },
   languageText: {
-    color: '#FF5722',
+    color: '#ff5e00',
     fontSize: 16,
   },
   selectedLanguageText: {
@@ -229,7 +274,7 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
   },
   continueButton: {
-    backgroundColor: '#FF5722',
+    backgroundColor: '#ff5e00',
     marginHorizontal: 40,
     paddingVertical: 15,
     borderRadius: 25,

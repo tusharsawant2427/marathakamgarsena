@@ -12,11 +12,13 @@ import Header from '../components/Header';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import RNFetchBlob from 'react-native-blob-util';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PdfViewer'>;
 
 const PdfViewerScreen = ({ route, navigation }: Props) => {
   const { pdfUrl, title } = route.params;
+  const [language, setLanguage] = useState('en');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -28,6 +30,7 @@ const PdfViewerScreen = ({ route, navigation }: Props) => {
 
   useEffect(() => {
     downloadPdf();
+    AsyncStorage.getItem('language').then(lang => setLanguage(lang || 'en'));
 
     return () => {
       if (downloadRef.current) {
@@ -121,7 +124,7 @@ const PdfViewerScreen = ({ route, navigation }: Props) => {
       <View style={styles.pdfContainer}>
         {isLoading ? (
           <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color="#FF5722" />
+            <ActivityIndicator size="large" color="#ff5e00" />
             <Text style={styles.loaderText}>
               Loading... {Math.round(loadingProgress * 100)}%
             </Text>
@@ -172,7 +175,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E0E0E0',
   },
   title: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '500',
     color: '#333',
     marginBottom: 4,
@@ -202,7 +205,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: '#FF5722',
+    color: '#ff5e00',
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -224,7 +227,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#FF5722',
+    backgroundColor: '#ff5e00',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,

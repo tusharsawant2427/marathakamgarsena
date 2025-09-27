@@ -14,12 +14,16 @@ const translations: Translations = {
     mr: 'डॅशबोर्ड',
   },
   contactUs: {
+    en: 'Contact and Support',
+    mr: 'संपर्क आणि सहायता',
+  },
+  contactUsMenu: {
     en: 'Contact Us',
-    mr: 'संपर्क करा',
+    mr: 'संपर्क साधा',
   },
   applyIdCard: {
-    en: 'Apply for ID Card',
-    mr: 'आयडी कार्डसाठी अर्ज करा',
+    en: 'My ID Card',
+    mr: 'माझे ओळखपत्र',
   },
   issuesAndHelp: {
     en: 'Issues and Help',
@@ -31,15 +35,15 @@ const translations: Translations = {
   },
   socialHandles: {
     en: 'Social Handles',
-    mr: 'सोशल मीडिया',
+    mr: 'सोशल लिंक्स',
   },
   shareApp: {
     en: 'Share This App',
     mr: 'ॲप शेअर करा',
   },
   changeLanguage: {
-    en: 'Change Language to Marathi',
-    mr: 'भाषा मराठी करा',
+    en: 'भाषा मराठी करा',
+    mr: 'Language to English',
   },
   profile: {
     en: 'Profile',
@@ -58,12 +62,12 @@ const translations: Translations = {
     mr: 'कंपनीचे नाव',
   },
   profileDesignation: {
-    en: 'Designation',
-    mr: 'पदनाम',
+    en: 'Designation / Job profile',
+    mr: 'पद',
   },
   profileRegistrationNumber: {
     en: 'Registration Number',
-    mr: 'नोंदणी क्रमांक',
+    mr: 'सभासद क्रमांक',
   },
   editProfileTitle: {
     en: 'Edit Profile',
@@ -83,11 +87,16 @@ const translations: Translations = {
   },
   editProfileDesignation: {
     en: 'Please Enter Designation',
-    mr: 'कृपया पदनाम प्रविष्ट करा',
+    mr: 'कृपया पद प्रविष्ट करा',
   },
   editProfileAddress: {
     en: 'Enter an address',
     mr: 'पत्ता प्रविष्ट करा',
+  },
+
+  profileAddress: {
+    en: 'Address',
+    mr: 'पत्ता',
   },
   editProfileSave: {
     en: 'SAVE PROFILE',
@@ -151,7 +160,7 @@ const translations: Translations = {
   },
   otpSent: {
     en: 'OTP has been sent to',
-    mr: 'OTP पाठवला आहे',
+    mr: 'आपल्या मोबाइल फोनवर ओ टी पी पाठवला आहे, तो खाली टाका',
   },
   enterOtp: {
     en: 'Enter OTP',
@@ -159,7 +168,7 @@ const translations: Translations = {
   },
   verify: {
     en: 'Verify',
-    mr: 'सत्यापित करा',
+    mr: 'व्हेरिफाय करा',
   },
   invalidOtp: {
     en: 'Please enter a valid 6-digit OTP',
@@ -197,7 +206,51 @@ const translations: Translations = {
     en: 'Profile',
     mr: 'प्रोफाइल',
   },
-};
+  change: {
+    en: 'Change',
+    mr: 'बदला',
+  },
+  remove: {
+    en: 'Remove',
+    mr: 'हटवा',
+  },
+  chooseFromGallery: {
+    en: 'Choose from Gallery',
+    mr: 'गॅलरीमधून निवडा',
+  },
+  verifyTitle: {
+    en: 'Verify Your Number',
+    mr: 'आपला नंबर व्हेरिफाय करा',
+  },
+  verifySubtitle: {
+    en: 'Please enter your mobile number to receive a verification code.',  
+    mr: 'ओ टी पी मिळविण्यासाठी आपला मोबाइल क्रमांक टाका.',
+  },
+  mobileNumber: {
+    en: 'Mobile Number',
+    mr: 'मोबाइल नंबर',
+  },
+  continue: {
+    en: 'Continue',
+    mr: 'पुढे',
+  },
+  welcome: {
+    en: 'Welcome !',
+    mr: 'स्वागत आहे!',
+  },
+  membershipRegistration: {
+    en: 'Membership Registration',
+    mr: 'सभासद नोंदणी',
+  },
+  removeImage: {
+    en: 'Are you sure you want to remove the selected image?',
+    mr: 'आपण निवडलेल्या चित्राचे हटवण्याची खात्री करा?',
+  },
+  removeImageTitle: {
+    en: 'Remove Image',
+    mr: 'चित्र हटवा',
+  },
+  };
 
 type LanguageContextType = {
   language: Language;

@@ -1,6 +1,7 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+apply plugin: 'com.google.gms.google-services'
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -77,13 +78,13 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.marathakamgarsena"
+    namespace "comm.mks.india"
     defaultConfig {
-        applicationId "com.marathakamgarsena"
+        applicationId "comm.mks.india"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 71
+        versionName "4.1.2"
     }
     signingConfigs {
         debug {
@@ -92,15 +93,19 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            storeFile file('kamgar.jks')
+            storePassword 'Mahesh@KamgarApp'
+            keyAlias 'kamgar'
+            keyPassword 'Mahesh@KamgarApp'
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
@@ -110,6 +115,9 @@ android {
             force 'androidx.core:core:1.13.1'
             force 'androidx.core:core-ktx:1.13.1'
         }
+    }
+    aaptOptions {
+        cruncherEnabled = false
     }
 }
 
