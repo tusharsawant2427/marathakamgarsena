@@ -35,7 +35,7 @@ const ContactUsScreen = () => {
   const { userData } = useAuth();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  // const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchMembers();
@@ -93,8 +93,8 @@ const ContactUsScreen = () => {
   };
 
   const filteredMembers = members.filter(member => 
-    member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    member.designation.toLowerCase().includes(searchQuery.toLowerCase())
+    member.name.toLowerCase() ||
+    member.designation.toLowerCase()
   );
 
   return (
@@ -154,11 +154,13 @@ const ContactUsScreen = () => {
           <View style={styles.contactsGrid}>
             {filteredMembers.map((member) => (
               <View key={member.id} style={styles.contactCard}>
-                <Image 
-                  source={member.profile ? { uri: member.profile } : require('../../assets/splash_logo_main.png')} 
-                  style={styles.contactImage} 
-                  defaultSource={require('../../assets/splash_logo_main.png')}
-                />
+                 <View style={styles.imageWrapper}>
+                    <Image 
+                      source={member.profile ? { uri: member.profile } : require('../../assets/splash_logo_main.png')} 
+                      style={styles.contactImage} 
+                      defaultSource={require('../../assets/splash_logo_main.png')}
+                    />
+                 </View>
                 <Text style={styles.contactName}>{member.name}</Text>
                 <Text style={styles.contactPosition}>{member.designation}</Text>
                 <TouchableOpacity onPress={() => handleCall(member.mobile_number)}>
@@ -317,15 +319,25 @@ const styles = StyleSheet.create({
     width: '30%',
     backgroundColor: '#fff',
     padding: 8,
-    marginBottom: 16,
+    marginBottom: 2,
     alignItems: 'center',
     elevation: 0,
   },
+  imageWrapper: {
+  width: 60,
+  height: 60,
+  borderRadius: 40,   // circle
+  overflow: 'hidden', // cut outside parts
+  backgroundColor: '#f0f0f0', // fallback 
+   paddingBottom: 0,
+   elevation: 0,
+},
   contactImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginBottom: 4,
+  minWidth: 60,
+  minHeight: 80,
+  resizeMode: "cover",
+
+    // borderRadius: 100,
   },
   contactName: {
     fontSize: 13,
@@ -343,12 +355,15 @@ const styles = StyleSheet.create({
     color: '#ff5e00',
     textDecorationLine: 'underline',
     marginBottom: 2,
+        textAlign:'center',
     fontSize: 11,
   },
   contactEmail: {
     color: '#ff5e00',
     textDecorationLine: 'underline',
-    fontSize: 10,
+    fontSize: 9,
+    textAlign:'center',
+    textTransform: 'lowercase'
   },
   aboutSection: {
     padding: 16,
