@@ -17,6 +17,12 @@ import EditProfileScreen from '../screens/EditProfileScreen';
 import NewsDetailScreen from '../screens/NewsDetailScreen';
 import NewsScreen from '../screens/NewsScreen';
 import RegistrationScreen from '../screens/RegistrationScreen';
+import PaymentWebViewScreen from '../screens/PaymentWebViewScreen';
+import PaymentSuccessScreen from '../screens/PaymentSuccessScreen';
+import PaymentFailedScreen from '../screens/PaymentFailedScreen';
+import PaymentPendingScreen from '../screens/PaymentPendingScreen';
+import PaymentHistoryScreen from '../screens/PaymentHistoryScreen';
+import ExamplePaymentScreen from '../screens/ExamplePaymentScreen';
 import { RootStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -26,7 +32,7 @@ const AppNavigator = () => {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator 
+      <Stack.Navigator
         key={`${isAuthenticated}-${needsRegistration}`}
         screenOptions={{
           headerShown: false,
@@ -57,6 +63,13 @@ const AppNavigator = () => {
             <Stack.Screen name="EditProfile" component={EditProfileScreen} />
             <Stack.Screen name="ApplyIDCard" component={ApplyIDCardScreen} />
             <Stack.Screen name="NewsDetail" component={NewsDetailScreen} />
+            {/* Payment Screens */}
+            <Stack.Screen name="ExamplePayment" component={ExamplePaymentScreen} />
+            <Stack.Screen name="PaymentWebView" component={PaymentWebViewScreen} />
+            <Stack.Screen name="PaymentSuccess" component={PaymentSuccessScreen} />
+            <Stack.Screen name="PaymentFailed" component={PaymentFailedScreen} />
+            <Stack.Screen name="PaymentPending" component={PaymentPendingScreen} />
+            <Stack.Screen name="PaymentHistory" component={PaymentHistoryScreen} />
           </>
         )}
       </Stack.Navigator>
@@ -64,4 +77,4 @@ const AppNavigator = () => {
   );
 };
 
-export default AppNavigator; 
+export default AppNavigator;

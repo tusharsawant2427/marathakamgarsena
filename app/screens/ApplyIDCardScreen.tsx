@@ -13,12 +13,16 @@ import {
   Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import Header from '../components/Header';
 import ViewShot, { captureRef } from 'react-native-view-shot';
 import Share from 'react-native-share';
 import RNFS from 'react-native-fs';
+
+type NavigationType = NativeStackNavigationProp<RootStackParamList>;
 
 interface FormData {
   name: string;
@@ -112,7 +116,7 @@ const getScaledPosition = (
 };
 
 const ApplyIDCardScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationType>();
   const { userData, login } = useAuth();
   const { language } = useLanguage();
   const viewShotRef = useRef<ViewShot>(null);
@@ -137,78 +141,15 @@ const ApplyIDCardScreen = () => {
         expiryDate: userData.expiryDate || '',
       });
 
-      // If user is not premium, initiate ID card request
+      // Only show loading if not premium (ID card not activated)
+      // If user is premium, they already have access to ID card
       if (!userData.isPremium) {
-        handleIdCardRequest();
+        setLoading(false);
+      } else {
+        setLoading(false);
       }
     }
   }, [userData]);
-
-  const handleIdCardRequest = async () => {
-    try {
-      setLoading(true);
-      
-      // First API call to request ID card
-      const requestResponse = await fetch('https://marathikamgarsena.com/api/request-for-id', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userData?.token}`
-        },
-        body: JSON.stringify({
-          id_card_id: 1
-        }),
-      });
-
-      const requestData = await requestResponse.json();
-
-      if (!requestData.success) {
-        Alert.alert('Error', requestData.message || 'Failed to request ID card');
-        return;
-      }
-
-      // Second API call to update ID card status
-      const updateResponse = await fetch('https://marathikamgarsena.com/api/update-for-id', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userData?.token}`
-        },
-        body: JSON.stringify({
-          id_card_id: 1,
-          order_id: requestData.data.order_id,
-          transaction_id: requestData.data.transaction_id
-        }),
-      });
-
-      const updateData = await updateResponse.json();
-
-      if (updateData.success) {
-        const subscriptionEndDate = updateData.data.subscription_end_date;
-        // Update form data with expiry date
-        setFormData(prev => ({
-          ...prev,
-          expiryDate: subscriptionEndDate || prev.expiryDate
-        }));
-
-        // Update user's premium status using login function
-        if (userData) {
-          await login({
-            ...userData,
-            isPremium: true,
-            expiryDate: subscriptionEndDate
-          });
-        }
-      } else {
-        Alert.alert('Error', updateData.message || 'Failed to update ID card status');
-      }
-    } catch (error) {
-      console.error('Error in ID card request:', error);
-      Alert.alert('Error', 'Failed to process ID card request');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const generateIDCard = async () => {
     try {
@@ -286,7 +227,27 @@ const ApplyIDCardScreen = () => {
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#ff5e00" />
-            <Text style={styles.loadingText}>Processing your ID card request...</Text>
+            <Text style={styles.loadingText}>Loading your ID card...</Text>
+          </View>
+        ) : !userData?.isPremium ? (
+          <View style={styles.premiumRequiredContainer}>
+            <Text style={styles.premiumIcon}>🔒</Text>
+            <Text style={styles.premiumTitle}>Premium Membership Required</Text>
+            <Text style={styles.premiumText}>
+              To download your ID card, you need to activate premium membership by making a payment.
+            </Text>
+            <TouchableOpacity
+              style={styles.activateButton}
+              onPress={() => navigation.navigate('ExamplePayment')}
+              activeOpacity={0.8}>
+              <Text style={styles.activateButtonText}>Activate Premium Membership</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.backToDashboardButton}
+              onPress={() => navigation.navigate('Dashboard')}
+              activeOpacity={0.8}>
+              <Text style={styles.backToDashboardButtonText}>Back to Dashboard</Text>
+            </TouchableOpacity>
           </View>
         ) : (
           <>
@@ -555,6 +516,60 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 16,
   },
+  premiumRequiredContainer: {
+    padding: 20,
+    alignItems: 'center',
+    marginTop: 40,
+  },
+  premiumIcon: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  premiumTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  premiumText: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+    paddingHorizontal: 20,
+  },
+  activateButton: {
+    backgroundColor: '#667eea',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+    width: '100%',
+    elevation: 2,
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  activateButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  backToDashboardButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+    width: '100%',
+  },
+  backToDashboardButtonText: {
+    color: '#667eea',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
 
-export default ApplyIDCardScreen; 
+export default ApplyIDCardScreen;
