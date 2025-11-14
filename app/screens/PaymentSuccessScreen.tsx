@@ -6,13 +6,15 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   SafeAreaView,
-  StatusBar,
   ScrollView,
   Alert,
 } from 'react-native';
 import { getPaymentStatus } from '../services/paymentService';
+import { getSubscriptionStatus } from '../services/subscriptionService';
 import { PaymentStatusResponse } from '../types/payment';
+import { SubscriptionStatus } from '../types/subscription';
 import { useAuth } from '../context/AuthContext';
+import Header from '../components/Header';
 
 interface PaymentSuccessScreenProps {
   route: {
@@ -32,18 +34,18 @@ const PaymentSuccessScreen: React.FC<PaymentSuccessScreenProps> = ({
   const { orderId, amount, description } = route.params;
   const { userData, updateUserData } = useAuth();
   const [paymentDetails, setPaymentDetails] = useState<PaymentStatusResponse | null>(null);
+  const [subscription, setSubscription] = useState<SubscriptionStatus | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activatingIDCard, setActivatingIDCard] = useState(false);
-  const [idCardActivated, setIdCardActivated] = useState(false);
+  const [checkingSubscription, setCheckingSubscription] = useState(false);
 
   const fetchPaymentDetails = async () => {
     try {
       const details = await getPaymentStatus(orderId);
       setPaymentDetails(details);
       
-      // If payment is successful and ID card not yet activated, activate it
-      if (details.status === 'SUCCESS' && !idCardActivated) {
-        await activateIDCard();
+      // If payment is successful, check subscription status
+      if (details.status === 'SUCCESS' && userData?.id) {
+        await checkSubscriptionStatus();
       }
     } catch (error) {
       console.error('Error fetching payment details:', error);
@@ -52,71 +54,43 @@ const PaymentSuccessScreen: React.FC<PaymentSuccessScreenProps> = ({
     }
   };
 
-  const activateIDCard = async () => {
-    if (!userData?.token || activatingIDCard) {
+  const checkSubscriptionStatus = async () => {
+    if (!userData?.id || checkingSubscription) {
       return;
     }
 
-    setActivatingIDCard(true);
+    setCheckingSubscription(true);
     try {
-      // First API call to request ID card
-      const requestResponse = await fetch('https://marathikamgarsena.com/api/request-for-id', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userData.token}`,
-        },
-        body: JSON.stringify({
-          id_card_id: 1,
-        }),
-      });
-
-      const requestData = await requestResponse.json();
-
-      if (!requestData.success) {
-        console.error('ID card request failed:', requestData.message);
-        setActivatingIDCard(false);
-        return;
-      }
-
-      // Second API call to update ID card status
-      const updateResponse = await fetch('https://marathikamgarsena.com/api/update-for-id', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userData.token}`,
-        },
-        body: JSON.stringify({
-          id_card_id: 1,
-          order_id: requestData.data.order_id,
-          transaction_id: requestData.data.transaction_id,
-        }),
-      });
-
-      const updateData = await updateResponse.json();
-
-      if (updateData.success) {
-        const subscriptionEndDate = updateData.data.subscription_end_date;
+      const subscriptionStatus = await getSubscriptionStatus(userData.id);
+      
+      if (subscriptionStatus) {
+        setSubscription(subscriptionStatus);
         
-        // Update user's premium status
-        await updateUserData({
-          isPremium: true,
-          expiryDate: subscriptionEndDate,
-        });
+        // Update user's premium status if subscription is active
+        if (subscriptionStatus.status === 'active' && subscriptionStatus.is_active) {
+          // Force update the user data with premium status
+          await updateUserData({
+            isPremium: true,
+            is_premium: true,
+            expiryDate: subscriptionStatus.subscription_end_date,
+            subscription_end_date: subscriptionStatus.subscription_end_date,
+            days_remaining: subscriptionStatus.days_remaining,
+          });
 
-        setIdCardActivated(true);
-        Alert.alert(
-          'ID Card Activated!',
-          'Your ID card has been activated successfully. You can now download it.',
-          [{ text: 'OK' }]
-        );
-      } else {
-        console.error('ID card update failed:', updateData.message);
+          console.log('Premium status updated successfully');
+          
+          Alert.alert(
+            'Subscription Active!',
+            `Your subscription has been activated successfully. Valid until ${formatDate(subscriptionStatus.subscription_end_date)}`,
+            [{ text: 'OK' }]
+          );
+        }
       }
-    } catch (error) {
-      console.error('Error activating ID card:', error);
+    } catch (error: any) {
+      console.error('Error checking subscription status:', error);
+      // Don't show error alert as this is automatic check
     } finally {
-      setActivatingIDCard(false);
+      setCheckingSubscription(false);
     }
   };
 
@@ -145,7 +119,12 @@ const PaymentSuccessScreen: React.FC<PaymentSuccessScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <Header
+        title="Payment Success"
+        showBackButton={false}
+        showIcons={false}
+      />
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Success Icon */}
         <View style={styles.iconContainer}>
@@ -156,14 +135,15 @@ const PaymentSuccessScreen: React.FC<PaymentSuccessScreenProps> = ({
 
         {/* Success Message */}
         <Text style={styles.title}>Payment Successful!</Text>
-        <Text style={styles.subtitle}>
-          Your payment has been processed successfully
+        <Text style={styles.subtitle}>Thank you for your payment</Text>
+        <Text style={styles.subtitleSecondary}>
+          Your transaction has been completed successfully
         </Text>
 
         {/* Payment Details Card */}
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#667eea" />
+            <ActivityIndicator size="large" color="#ff5e00" />
             <Text style={styles.loadingText}>Loading payment details...</Text>
           </View>
         ) : (
@@ -225,29 +205,39 @@ const PaymentSuccessScreen: React.FC<PaymentSuccessScreenProps> = ({
           </Text>
         </View>
 
-        {/* ID Card Activation Status */}
-        {activatingIDCard && (
+        {/* Subscription Status */}
+        {checkingSubscription && (
           <View style={styles.activationBox}>
-            <ActivityIndicator size="small" color="#667eea" />
-            <Text style={styles.activationText}>Activating your ID card...</Text>
+            <ActivityIndicator size="small" color="#ff5e00" />
+            <Text style={styles.activationText}>Checking subscription status...</Text>
           </View>
         )}
 
-        {idCardActivated && (
+        {subscription && subscription.status === 'active' && (
           <View style={styles.successBox}>
             <Text style={styles.successBoxIcon}>✓</Text>
-            <Text style={styles.successBoxText}>ID Card Activated Successfully!</Text>
+            <View>
+              <Text style={styles.successBoxText}>Subscription Active!</Text>
+              <Text style={styles.successBoxSubtext}>
+                Valid until {formatDate(subscription.subscription_end_date)}
+              </Text>
+              {subscription.days_remaining <= 30 && (
+                <Text style={styles.expiryWarning}>
+                  ⚠️ {subscription.days_remaining} days remaining
+                </Text>
+              )}
+            </View>
           </View>
         )}
 
         {/* Action Buttons */}
         <View style={styles.buttonContainer}>
-          {idCardActivated && (
+          {subscription && subscription.status === 'active' && subscription.is_active && (
             <TouchableOpacity
               style={styles.idCardButton}
               onPress={() => navigation.navigate('ApplyIDCard')}
               activeOpacity={0.8}>
-              <Text style={styles.idCardButtonText}>📥 Download ID Card</Text>
+              <Text style={styles.idCardButtonText}>📥 View ID Card</Text>
             </TouchableOpacity>
           )}
 
@@ -281,7 +271,7 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     alignItems: 'center',
-    marginTop: 40,
+    marginTop: 20,
     marginBottom: 24,
   },
   successCircle: {
@@ -310,7 +300,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 18,
+    color: '#ff5e00',
+    textAlign: 'center',
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  subtitleSecondary: {
+    fontSize: 14,
     color: '#6b7280',
     textAlign: 'center',
     marginBottom: 32,
@@ -363,33 +360,35 @@ const styles = StyleSheet.create({
   },
   detailAmountValue: {
     fontSize: 18,
-    color: '#10b981',
+    color: '#ff5e00',
     fontWeight: 'bold',
     flex: 1,
     textAlign: 'right',
   },
   statusBadge: {
-    backgroundColor: '#d1fae5',
+    backgroundColor: '#fff5f0',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#ff5e00',
   },
   statusText: {
     fontSize: 12,
-    color: '#065f46',
+    color: '#ff5e00',
     fontWeight: '600',
   },
   infoBox: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#fff5f0',
     borderRadius: 8,
     padding: 16,
     marginBottom: 24,
     borderLeftWidth: 4,
-    borderLeftColor: '#3b82f6',
+    borderLeftColor: '#ff5e00',
   },
   infoText: {
     fontSize: 14,
-    color: '#1e40af',
+    color: '#d94e00',
     lineHeight: 20,
   },
   activationBox: {
@@ -400,12 +399,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
   },
   activationText: {
     fontSize: 14,
     color: '#374151',
     fontWeight: '500',
+    marginLeft: 12,
   },
   successBox: {
     backgroundColor: '#d1fae5',
@@ -413,9 +412,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
+    alignItems: 'flex-start',
     borderWidth: 1,
     borderColor: '#10b981',
   },
@@ -423,24 +420,37 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: '#10b981',
     fontWeight: 'bold',
+    marginRight: 12,
+    marginTop: 2,
   },
   successBoxText: {
     fontSize: 15,
     color: '#065f46',
     fontWeight: '600',
+    marginBottom: 4,
+  },
+  successBoxSubtext: {
+    fontSize: 13,
+    color: '#047857',
+    marginTop: 2,
+  },
+  expiryWarning: {
+    fontSize: 12,
+    color: '#d97706',
+    marginTop: 4,
   },
   buttonContainer: {
     marginTop: 'auto',
     paddingTop: 20,
   },
   idCardButton: {
-    backgroundColor: '#10b981',
+    backgroundColor: '#ff5e00',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     marginBottom: 12,
-    elevation: 2,
-    shadowColor: '#10b981',
+    elevation: 3,
+    shadowColor: '#ff5e00',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -451,13 +461,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   primaryButton: {
-    backgroundColor: '#667eea',
+    backgroundColor: '#ff5e00',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     marginBottom: 12,
-    elevation: 2,
-    shadowColor: '#667eea',
+    elevation: 3,
+    shadowColor: '#ff5e00',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,

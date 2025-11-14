@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,14 +6,16 @@ import {
   TextInput,
   ScrollView,
   SafeAreaView,
-  StatusBar,
   TouchableOpacity,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../context/AuthContext';
 import PaymentButton from '../components/PaymentButton';
+import Header from '../components/Header';
 
 type NavigationType = NativeStackNavigationProp<RootStackParamList>;
 
@@ -29,12 +31,30 @@ type NavigationType = NativeStackNavigationProp<RootStackParamList>;
 const ExamplePaymentScreen: React.FC = () => {
   const navigation = useNavigation<NavigationType>();
   const { userData } = useAuth();
-  const [amount, setAmount] = useState('100');
-  const [description, setDescription] = useState('Membership fee payment');
+  const [description, setDescription] = useState('ID Card payment');
+  const [amount, setAmount] = useState<number>(0);
+  const [loadingAmount, setLoadingAmount] = useState(true);
 
   // Get user ID and phone from auth context
   const userId = userData?.id || 1;
   const phoneNumber = userData?.mobile || userData?.phone_number;
+
+  useEffect(() => {
+    // Fetch amount from config API
+    const loadAmount = async () => {
+      try {
+        const { fetchConfigAmount } = await import('../services/paymentService');
+        const configAmount = await fetchConfigAmount();
+        setAmount(configAmount);
+      } catch (error: any) {
+        Alert.alert('Error', error.message || 'Failed to load payment amount');
+      } finally {
+        setLoadingAmount(false);
+      }
+    };
+
+    loadAmount();
+  }, []);
 
   const handlePaymentInitiated = () => {
     console.log('Payment initiated successfully');
@@ -46,22 +66,13 @@ const ExamplePaymentScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}>
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Make Payment</Text>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('PaymentHistory', {})}
-          style={styles.historyButton}>
-          <Text style={styles.historyButtonText}>History</Text>
-        </TouchableOpacity>
-      </View>
+      <Header
+        title="Make Payment"
+        showBackButton={true}
+        onBackPress={() => navigation.goBack()}
+        showIcons={false}
+      
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Info Card */}
@@ -76,19 +87,6 @@ const ExamplePaymentScreen: React.FC = () => {
         {/* Payment Form */}
         <View style={styles.formCard}>
           <Text style={styles.formTitle}>Payment Details</Text>
-
-          {/* Amount Input */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Amount (₹)</Text>
-            <TextInput
-              style={styles.input}
-              value={amount}
-              onChangeText={setAmount}
-              keyboardType="numeric"
-              placeholder="Enter amount"
-              placeholderTextColor="#9ca3af"
-            />
-          </View>
 
           {/* Description Input */}
           <View style={styles.inputGroup}>
@@ -106,25 +104,33 @@ const ExamplePaymentScreen: React.FC = () => {
 
           {/* Payment Summary */}
           <View style={styles.summaryCard}>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Amount:</Text>
-              <Text style={styles.summaryValue}>₹{amount || '0'}</Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Processing Fee:</Text>
-              <Text style={styles.summaryValue}>₹0</Text>
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.summaryRow}>
-              <Text style={styles.totalLabel}>Total Payable:</Text>
-              <Text style={styles.totalValue}>₹{amount || '0'}</Text>
-            </View>
+            {loadingAmount ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color="#667eea" />
+                <Text style={styles.loadingText}>Loading amount...</Text>
+              </View>
+            ) : (
+              <>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Amount:</Text>
+                  <Text style={styles.summaryValue}>₹{amount.toFixed(2)}</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Processing Fee:</Text>
+                  <Text style={styles.summaryValue}>₹0</Text>
+                </View>
+                <View style={styles.divider} />
+                <View style={styles.summaryRow}>
+                  <Text style={styles.totalLabel}>Total Payable:</Text>
+                  <Text style={styles.totalValue}>₹{amount.toFixed(2)}</Text>
+                </View>
+              </>
+            )}
           </View>
 
           {/* Payment Button */}
           <PaymentButton
             userId={userId}
-            amount={parseFloat(amount) || 0}
             description={description}
             phoneNumber={phoneNumber}
             buttonText="Proceed to Payment"
@@ -148,32 +154,7 @@ const ExamplePaymentScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Quick Amount Buttons */}
-        <View style={styles.quickAmountCard}>
-          <Text style={styles.quickAmountTitle}>Quick Amount Selection</Text>
-          <View style={styles.quickAmountGrid}>
-            {['100', '500', '1000', '2000'].map((quickAmount) => (
-              <TouchableOpacity
-                key={quickAmount}
-                style={[
-                  styles.quickAmountButton,
-                  amount === quickAmount && styles.quickAmountButtonActive,
-                ]}
-                onPress={() => setAmount(quickAmount)}
-                activeOpacity={0.7}>
-                <Text
-                  style={[
-                    styles.quickAmountText,
-                    amount === quickAmount && styles.quickAmountTextActive,
-                  ]}>
-                  ₹{quickAmount}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Security Info */}
+       {/* Security Info */}
         <View style={styles.securityCard}>
           <Text style={styles.securityIcon}>🔒</Text>
           <Text style={styles.securityText}>
@@ -190,56 +171,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f9fafb',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backButtonText: {
-    fontSize: 24,
-    color: '#374151',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1f2937',
-  },
-  historyButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  historyButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#667eea',
-  },
   scrollContent: {
     padding: 16,
   },
   infoCard: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#fff5f0',
     borderRadius: 12,
     padding: 20,
     alignItems: 'center',
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#dbeafe',
+    borderColor: '#ffd4b8',
   },
   infoIcon: {
     fontSize: 48,
@@ -248,12 +190,12 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1e40af',
+    color: '#d94e00',
     marginBottom: 4,
   },
   infoText: {
     fontSize: 14,
-    color: '#3b82f6',
+    color: '#ff5e00',
     textAlign: 'center',
   },
   formCard: {
@@ -317,6 +259,27 @@ const styles = StyleSheet.create({
     color: '#1f2937',
     fontWeight: '500',
   },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginLeft: 8,
+  },
+  historyButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginRight: 5,
+  },
+  historyButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#fff',
+  },
   divider: {
     height: 1,
     backgroundColor: '#e5e7eb',
@@ -330,7 +293,7 @@ const styles = StyleSheet.create({
   totalValue: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#667eea',
+    color: '#ff5e00',
   },
   methodsCard: {
     marginTop: 20,
@@ -347,7 +310,6 @@ const styles = StyleSheet.create({
   methodsList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
   },
   methodItem: {
     fontSize: 12,
@@ -356,50 +318,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-  },
-  quickAmountCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  quickAmountTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: 16,
-  },
-  quickAmountGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  quickAmountButton: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: '#f9fafb',
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  quickAmountButtonActive: {
-    backgroundColor: '#667eea',
-    borderColor: '#667eea',
-  },
-  quickAmountText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
-  },
-  quickAmountTextActive: {
-    color: '#fff',
+    marginRight: 8,
+    marginBottom: 8,
   },
   securityCard: {
     flexDirection: 'row',
@@ -408,10 +328,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0fdf4',
     borderRadius: 8,
     padding: 16,
-    gap: 8,
   },
   securityIcon: {
     fontSize: 20,
+    marginRight: 8,
   },
   securityText: {
     fontSize: 13,

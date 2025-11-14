@@ -12,7 +12,7 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../context/AuthContext';
@@ -21,6 +21,7 @@ import Header from '../components/Header';
 import ViewShot, { captureRef } from 'react-native-view-shot';
 import Share from 'react-native-share';
 import RNFS from 'react-native-fs';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type NavigationType = NativeStackNavigationProp<RootStackParamList>;
 
@@ -117,7 +118,7 @@ const getScaledPosition = (
 
 const ApplyIDCardScreen = () => {
   const navigation = useNavigation<NavigationType>();
-  const { userData, login } = useAuth();
+  const { userData, login, updateUserData } = useAuth();
   const { language } = useLanguage();
   const viewShotRef = useRef<ViewShot>(null);
   const [loading, setLoading] = useState(false);
@@ -130,6 +131,26 @@ const ApplyIDCardScreen = () => {
     expiryDate: '',
   });
 
+  // Refresh user data when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      const refreshUserData = async () => {
+        try {
+          const storedUserData = await AsyncStorage.getItem('userData');
+          if (storedUserData) {
+            const parsedData = JSON.parse(storedUserData);
+            await updateUserData(parsedData);
+            console.log('User data refreshed, isPremium:', parsedData.isPremium);
+          }
+        } catch (error) {
+          console.error('Error refreshing user data:', error);
+        }
+      };
+      
+      refreshUserData();
+    }, [])
+  );
+
   useEffect(() => {
     if (userData) {
       setFormData({
@@ -138,12 +159,12 @@ const ApplyIDCardScreen = () => {
         mobile: userData.mobileNumber || '',
         uniqueId: userData.uniqueId || '',
         profileImage: userData.profileImage || '',
-        expiryDate: userData.expiryDate || '',
+        expiryDate: userData.expiryDate || userData.subscription_end_date || '',
       });
 
       // Only show loading if not premium (ID card not activated)
       // If user is premium, they already have access to ID card
-      if (!userData.isPremium) {
+      if (!userData.isPremium && !userData.is_premium) {
         setLoading(false);
       } else {
         setLoading(false);
@@ -229,7 +250,7 @@ const ApplyIDCardScreen = () => {
             <ActivityIndicator size="large" color="#ff5e00" />
             <Text style={styles.loadingText}>Loading your ID card...</Text>
           </View>
-        ) : !userData?.isPremium ? (
+        ) : !userData?.isPremium && !userData?.is_premium ? (
           <View style={styles.premiumRequiredContainer}>
             <Text style={styles.premiumIcon}>🔒</Text>
             <Text style={styles.premiumTitle}>Premium Membership Required</Text>

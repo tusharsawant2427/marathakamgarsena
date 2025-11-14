@@ -35,7 +35,7 @@ const Header = ({
   rightComponent,
 }: HeaderProps) => {
   const statusBarHeight = Platform.OS === 'ios' ? 20 : (StatusBar.currentHeight || 0) <= 42 ? 20 : StatusBar.currentHeight || 0;
-  const headerHeight = 60 + statusBarHeight;
+  const headerHeight = 80 + statusBarHeight;
   return (
     <View style={[styles.headerContainer, { height: headerHeight }]}>
       <StatusBar backgroundColor="#ff5e00" barStyle="light-content" />
@@ -45,7 +45,7 @@ const Header = ({
           style={[styles.headerImage, { height: headerHeight }]}
           resizeMode="cover"
         />
-        <View style={[styles.headerContent, { marginTop: statusBarHeight }]}>
+        <View style={[styles.headerContent, { marginTop: statusBarHeight+20 }]}>
         {titleStyleCenter && (
           <View style={styles.leftSection}>
             {showBackButton && (

@@ -11,6 +11,19 @@ import {
   PaymentApiResponse,
 } from '../types/payment';
 
+// Config response type
+interface ConfigResponse {
+  terms_condition: string;
+  privacy_policy: string;
+  id_card: {
+    id: number;
+    name: string;
+    description: string;
+    amount: string;
+    file_name: string;
+  };
+}
+
 // Create axios instance for payment API
 const paymentApi = axios.create({
   baseURL: PAYMENT_CONFIG.API_BASE_URL,
@@ -182,9 +195,29 @@ export const verifyPayment = async (
   }
 };
 
+/**
+ * Fetch config details to get ID card amount
+ * @returns ID card amount as number
+ */
+export const fetchConfigAmount = async (): Promise<number> => {
+  try {
+    const response = await paymentApi.post<PaymentApiResponse<ConfigResponse>>('/config', {});
+    
+    if (response.data.success && response.data.data?.id_card) {
+      return parseFloat(response.data.data.id_card.amount);
+    } else {
+      throw new Error('Failed to fetch config amount');
+    }
+  } catch (error: any) {
+    console.error('Error fetching config amount:', error);
+    throw new Error('Failed to fetch payment amount. Please try again.');
+  }
+};
+
 export default {
   createPaymentOrder,
   getPaymentStatus,
   getPaymentHistory,
   verifyPayment,
+  fetchConfigAmount,
 };

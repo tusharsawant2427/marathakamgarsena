@@ -5,12 +5,11 @@ import {
   ActivityIndicator,
   Alert,
   SafeAreaView,
-  StatusBar,
-  TouchableOpacity,
   Text,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { PaymentWebViewMessage } from '../types/payment';
+import Header from '../components/Header';
 
 interface PaymentWebViewScreenProps {
   route: {
@@ -277,18 +276,17 @@ const PaymentWebViewScreen: React.FC<PaymentWebViewScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <Header
+        title="Complete Payment"
+        showBackButton={true}
+        onBackPress={handleGoBack}
+        showIcons={false}
+      />
 
-      {/* Custom Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={handleGoBack}
-          style={styles.backButton}
-          activeOpacity={0.7}>
-          <Text style={styles.backButtonText}>✕</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Complete Payment</Text>
-        <View style={styles.backButton} />
+      {/* Secure Payment Banner */}
+      <View style={styles.secureBanner}>
+        <Text style={styles.secureIcon}>🔒</Text>
+        <Text style={styles.secureText}>Secure Payment Gateway</Text>
       </View>
 
       {/* WebView */}
@@ -315,18 +313,24 @@ const PaymentWebViewScreen: React.FC<PaymentWebViewScreenProps> = ({
         thirdPartyCookiesEnabled={true}
         originWhitelist={['*']}
         mixedContentMode="always"
+
       />
 
       {/* Loading Overlay */}
       {loading && (
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#667eea" />
-          <Text style={styles.loadingText}>Loading payment page...</Text>
-          {loadTimeout && (
-            <Text style={styles.timeoutText}>
-              Taking longer than usual. Please wait...
-            </Text>
-          )}
+          <View style={styles.loaderContent}>
+            <ActivityIndicator size="large" color="#ff5e00" />
+            <Text style={styles.loadingText}>Processing your payment...</Text>
+            <Text style={styles.loadingSubtext}>Please wait, do not close this page</Text>
+            {loadTimeout && (
+              <View style={styles.timeoutContainer}>
+                <Text style={styles.timeoutText}>
+                  ⏳ Taking longer than usual. Please wait...
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
       )}
     </SafeAreaView>
@@ -336,41 +340,30 @@ const PaymentWebViewScreen: React.FC<PaymentWebViewScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f9fafb',
   },
-  header: {
+  secureBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#fff5f0',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ffd4b8',
   },
-  backButtonText: {
-    fontSize: 24,
-    color: '#374151',
-    fontWeight: '300',
+  secureIcon: {
+    fontSize: 16,
+    marginRight: 8,
   },
-  headerTitle: {
-    fontSize: 18,
+  secureText: {
+    fontSize: 14,
+    color: '#d94e00',
     fontWeight: '600',
-    color: '#1f2937',
   },
   webview: {
     flex: 1,
+    backgroundColor: '#ffffff',
   },
   loaderContainer: {
     position: 'absolute',
@@ -380,18 +373,48 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  },
+  loaderContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#fff',
+    padding: 32,
+    borderRadius: 16,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    minWidth: 280,
   },
   loadingText: {
-    marginTop: 16,
+    marginTop: 20,
     fontSize: 16,
+    color: '#1f2937',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  loadingSubtext: {
+    marginTop: 8,
+    fontSize: 13,
     color: '#6b7280',
+    textAlign: 'center',
+  },
+  timeoutContainer: {
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#fff5f0',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ffd4b8',
   },
   timeoutText: {
-    marginTop: 8,
-    fontSize: 14,
-    color: '#f59e0b',
-    fontStyle: 'italic',
+    fontSize: 13,
+    color: '#d94e00',
+    textAlign: 'center',
+    fontWeight: '500',
   },
 });
 
