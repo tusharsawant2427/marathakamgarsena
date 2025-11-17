@@ -40,6 +40,7 @@ export type RootStackParamList = {
     };
   };
   ImageViewer: { imageUrl: string; title: string };
+  WebView: { url: string; title: string };
 };
 
 export type NavigationProp = NativeStackNavigationProp<RootStackParamList>; 

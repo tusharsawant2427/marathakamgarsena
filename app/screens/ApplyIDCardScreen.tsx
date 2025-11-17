@@ -15,6 +15,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { NavigationProp } from '../types/navigation';
 import Header from '../components/Header';
 import ViewShot, { captureRef } from 'react-native-view-shot';
 import Share from 'react-native-share';
@@ -112,7 +113,7 @@ const getScaledPosition = (
 };
 
 const ApplyIDCardScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
   const { userData, login } = useAuth();
   const { language } = useLanguage();
   const viewShotRef = useRef<ViewShot>(null);
@@ -255,6 +256,20 @@ const ApplyIDCardScreen = () => {
       console.error('Error during sharing:', error);
       Alert.alert('Error', 'An error occurred while trying to share the ID card. Please try again.');
     }
+  };
+
+  const openTermsConditions = () => {
+    navigation.navigate('WebView', {
+      url: 'https://marathikamgarsena.com/terms-conditions?source=android',
+      title: language === 'mr' ? 'नियम आणि अटी' : 'Terms & Conditions',
+    });
+  };
+
+  const openPrivacyPolicy = () => {
+    navigation.navigate('WebView', {
+      url: 'https://marathikamgarsena.com/privacy-policy?source=android',
+      title: language === 'mr' ? 'गोपनीयता धोरण' : 'Privacy Policy',
+    });
   };
 
   // Get scaled positions for each field
@@ -421,30 +436,71 @@ const ApplyIDCardScreen = () => {
                 </View>
               </View>
             </ViewShot>
+  <View style={styles.divider} />
 
-            <Text style={styles.languageNote}>
-              {language === 'mr' ? 'मराठी ओळखपत्र तयार आहे' : 'Your ID Card is Ready'}
-            </Text>
+            <View style={styles.linksSection}>
+              {/* <Text style={styles.linksSectionTitle}>
+                {language === 'mr' ? 'अधिक माहिती' : 'More Information'}
+              </Text> */}
+              <View style={styles.linksContainer}>
+                <TouchableOpacity 
+                  style={styles.linkButton} 
+                  onPress={openTermsConditions}
+                >
+                  <Text style={styles.linkIcon}>📋</Text>
+                  <Text style={styles.linkButtonText} numberOfLines={1}>
+                    {language === 'mr' ? 'नियम व अटी' : 'Terms & Conditions'}
+                  </Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.downloadButton} 
-              onPress={generateIDCard}
-              disabled={loading}
-            >
-              <Text style={styles.downloadButtonText}>
-                {language === 'mr' ? 'ओळखपत्र डाउनलोड करा' : 'Download ID Card'}
+                <TouchableOpacity 
+                  style={styles.linkButton} 
+                  onPress={openPrivacyPolicy}
+                >
+                  <Text style={styles.linkIcon}>🔒</Text>
+                  <Text style={styles.linkButtonText} numberOfLines={1}>
+                    {language === 'mr' ? 'गोपनीयता' : 'Privacy Policy'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View style={styles.statusCard}>
+              <View style={styles.statusIconContainer}>
+                <Text style={styles.statusIcon}>✓</Text>
+              </View>
+              <Text style={styles.statusTitle}>
+                {language === 'mr' ? 'ओळखपत्र तयार आहे!' : 'ID Card is Ready!'}
               </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.shareButton} 
-              onPress={handleShare}
-              disabled={loading}
-            >
-              <Text style={styles.shareButtonText}>
-                {language === 'mr' ? 'सोशल मीडियावर शेअर करा' : 'Share to Social Media'}
+              <Text style={styles.statusSubtitle}>
+                {language === 'mr' ? 'आपले ओळखपत्र डाउनलोड किंवा शेअर करा' : 'Download or share your ID card'}
               </Text>
-            </TouchableOpacity>
+            </View>
+
+            <View style={styles.actionsContainer}>
+              <TouchableOpacity 
+                style={styles.downloadButton} 
+                onPress={generateIDCard}
+                disabled={loading}
+              >
+                <Text style={styles.buttonIcon}>⬇</Text>
+                <Text style={styles.downloadButtonText}>
+                  {language === 'mr' ? 'डाउनलोड करा' : 'Download'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.shareButton} 
+                onPress={handleShare}
+                disabled={loading}
+              >
+                <Text style={styles.buttonIcon}>📤</Text>
+                <Text style={styles.shareButtonText}>
+                  {language === 'mr' ? 'शेअर करा' : 'Share'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+          
           </>
         )}
       </View>
@@ -515,36 +571,145 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     fontSize: 16,
   },
-  languageNote: {
-    textAlign: 'center',
-    color: '#666',
-    marginVertical: 16,
+  statusCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    marginHorizontal: 16,
+    marginTop: 20,
+    marginBottom: 16,
+    alignItems: 'center',
+    shadowColor: '#ff5e00',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: '#ffe8dc',
   },
-  downloadButton: {
-    backgroundColor: '#ff5e00',
-    padding: 16,
-    borderRadius: 8,
+  statusIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#fff5f0',
+    justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
+    borderWidth: 2,
+    borderColor: '#ff5e00',
+  },
+  statusIcon: {
+    fontSize: 32,
+    color: '#ff5e00',
+    fontWeight: 'bold',
+  },
+  statusTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  statusSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+  },
+  actionsContainer: {
+    flexDirection: 'row',
     marginHorizontal: 16,
+    gap: 12,
+    marginBottom: 20,
+  },
+  downloadButton: {
+    flex: 1,
+    backgroundColor: '#ff5e00',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    shadowColor: '#ff5e00',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  shareButton: {
+    flex: 1,
+    backgroundColor: '#ff5e00',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    shadowColor: '#ff5e00',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  buttonIcon: {
+    fontSize: 20,
   },
   downloadButtonText: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  shareButton: {
-    backgroundColor: '#ff5e00',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginHorizontal: 16,
-    marginBottom: 20,
+    fontSize: 15,
+    fontWeight: '700',
   },
   shareButtonText: {
     color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#e0e0e0',
+    marginHorizontal: 32,
+    marginVertical: 10,
+  },
+  linksSection: {
+    marginBottom: 30,
+    paddingHorizontal: 16,
+  },
+  linksSectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 16,
+  },
+  linksContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 20,
+  },
+  linkButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    gap: 6,
+  },
+  linkIcon: {
+    fontSize: 18,
+  },
+  linkButtonText: {
+    color: '#ff5e00',
+    fontSize: 16,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
   loadingContainer: {
     padding: 20,
@@ -557,4 +722,5 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ApplyIDCardScreen; 
+export default ApplyIDCardScreen;
+ 

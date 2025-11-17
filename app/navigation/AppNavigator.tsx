@@ -17,6 +17,7 @@ import EditProfileScreen from '../screens/EditProfileScreen';
 import NewsDetailScreen from '../screens/NewsDetailScreen';
 import NewsScreen from '../screens/NewsScreen';
 import RegistrationScreen from '../screens/RegistrationScreen';
+import WebViewScreen from '../screens/WebViewScreen';
 import { RootStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -57,6 +58,7 @@ const AppNavigator = () => {
             <Stack.Screen name="EditProfile" component={EditProfileScreen} />
             <Stack.Screen name="ApplyIDCard" component={ApplyIDCardScreen} />
             <Stack.Screen name="NewsDetail" component={NewsDetailScreen} />
+            <Stack.Screen name="WebView" component={WebViewScreen} />
           </>
         )}
       </Stack.Navigator>
