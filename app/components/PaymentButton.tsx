@@ -88,13 +88,14 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     setLoading(true);
 
     try {
-      // Create payment order
+      // Create payment order with native SDK flag
       const orderData = await createPaymentOrder(
         userId,
         amount,
         description,
         phoneNumber,
-        metadata
+        metadata,
+        true // Use native SDK
       );
 
       setLoading(false);
@@ -104,13 +105,38 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
         onPaymentInitiated();
       }
 
-      // Navigate to WebView with payment URL
-      navigation.navigate('PaymentWebView', {
-        webviewUrl: orderData.webview_url,
-        orderId: orderData.order_id,
-        amount: orderData.amount,
-        description: description,
-      });
+      // Log the complete response for debugging
+      console.log('=== Payment Order Response ===');
+      console.log('Full response:', JSON.stringify(orderData, null, 2));
+      console.log('payment_session_id:', orderData.payment_session_id);
+      console.log('payment_session_id type:', typeof orderData.payment_session_id);
+      console.log('payment_session_id length:', orderData.payment_session_id?.length);
+      console.log('=============================');
+
+      // Check if we have payment_session_id for native SDK
+      if (orderData.payment_session_id && orderData.payment_session_id.trim() !== '') {
+        console.log('Using Cashfree Native SDK with session ID:', orderData.payment_session_id);
+        // Navigate to Cashfree native payment screen
+        navigation.navigate('CashfreePayment', {
+          sessionId: orderData.payment_session_id,
+          orderId: orderData.order_id,
+          amount: orderData.amount,
+          description: description,
+        });
+      } else {
+        console.log('payment_session_id not available, falling back to WebView');
+        // Fallback to WebView if payment_session_id is not available
+        if (orderData.webview_url) {
+          navigation.navigate('PaymentWebView', {
+            webviewUrl: orderData.webview_url,
+            orderId: orderData.order_id,
+            amount: orderData.amount,
+            description: description,
+          });
+        } else {
+          throw new Error('Neither payment_session_id nor webview_url available from backend');
+        }
+      }
     } catch (error: any) {
       setLoading(false);
       const errorMessage = error.message || 'Failed to initiate payment';

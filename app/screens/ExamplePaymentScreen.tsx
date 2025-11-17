@@ -76,13 +76,13 @@ const ExamplePaymentScreen: React.FC = () => {
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Info Card */}
-        <View style={styles.infoCard}>
+        {/* <View style={styles.infoCard}>
           <Text style={styles.infoIcon}>💳</Text>
           <Text style={styles.infoTitle}>Secure Payment Gateway</Text>
           <Text style={styles.infoText}>
             Powered by Cashfree - India's leading payment gateway
           </Text>
-        </View>
+        </View> */}
 
         {/* Payment Form */}
         <View style={styles.formCard}>
@@ -97,8 +97,8 @@ const ExamplePaymentScreen: React.FC = () => {
               onChangeText={setDescription}
               placeholder="Enter payment description"
               placeholderTextColor="#9ca3af"
-              multiline
-              numberOfLines={3}
+              multiline={false}
+              numberOfLines={1}
             />
           </View>
 
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     color: '#1f2937',
   },
   textArea: {
-    minHeight: 80,
+    minHeight: 10,
     textAlignVertical: 'top',
   },
   summaryCard: {

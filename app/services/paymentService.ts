@@ -68,14 +68,16 @@ paymentApi.interceptors.response.use(
  * @param description - Payment description
  * @param phoneNumber - User's phone number (required for card payments OTP)
  * @param metadata - Additional metadata (optional)
- * @returns Payment order data with webview URL
+ * @param useNativeSDK - Use Cashfree native SDK instead of WebView (default: true)
+ * @returns Payment order data with webview URL or payment session
  */
 export const createPaymentOrder = async (
   userId: number,
   amount: number,
   description: string,
   phoneNumber?: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, any>,
+  useNativeSDK: boolean = true
 ): Promise<CreatePaymentOrderResponse> => {
   try {
     const requestData: CreatePaymentOrderRequest = {

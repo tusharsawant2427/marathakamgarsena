@@ -267,6 +267,15 @@ const ApplyIDCardScreen = () => {
           </View>
         ) : !userData?.isPremium && !userData?.is_premium ? (
           <View style={styles.premiumRequiredContainer}>
+            {/* <View style={[styles.idCardContainer, { width: cardWidth, height: cardHeight }]}>
+              <View style={styles.idCardWrapper}>
+                <Image
+                  source={require('../../assets/id_card_layout_preview.jpg')}
+                  style={styles.idCardHeader}
+                  resizeMode="contain"
+                />
+              </View>
+            </View> */}
             <Text style={styles.premiumIcon}>🔒</Text>
             <Text style={styles.premiumTitle}>Premium Membership Required</Text>
             <Text style={styles.premiumText}>

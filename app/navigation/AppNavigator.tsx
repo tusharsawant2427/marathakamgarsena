@@ -18,6 +18,7 @@ import NewsDetailScreen from '../screens/NewsDetailScreen';
 import NewsScreen from '../screens/NewsScreen';
 import RegistrationScreen from '../screens/RegistrationScreen';
 import PaymentWebViewScreen from '../screens/PaymentWebViewScreen';
+import CashfreePaymentScreen from '../screens/CashfreePaymentScreen';
 import PaymentSuccessScreen from '../screens/PaymentSuccessScreen';
 import PaymentFailedScreen from '../screens/PaymentFailedScreen';
 import PaymentPendingScreen from '../screens/PaymentPendingScreen';
@@ -66,6 +67,7 @@ const AppNavigator = () => {
             <Stack.Screen name="NewsDetail" component={NewsDetailScreen} />
             {/* Payment Screens */}
             <Stack.Screen name="ExamplePayment" component={ExamplePaymentScreen} />
+            <Stack.Screen name="CashfreePayment" component={CashfreePaymentScreen} />
             <Stack.Screen name="PaymentWebView" component={PaymentWebViewScreen} />
             <Stack.Screen name="PaymentSuccess" component={PaymentSuccessScreen} />
             <Stack.Screen name="PaymentFailed" component={PaymentFailedScreen} />

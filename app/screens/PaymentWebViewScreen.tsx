@@ -284,10 +284,10 @@ const PaymentWebViewScreen: React.FC<PaymentWebViewScreenProps> = ({
       />
 
       {/* Secure Payment Banner */}
-      <View style={styles.secureBanner}>
+      {/* <View style={styles.secureBanner}>
         <Text style={styles.secureIcon}>🔒</Text>
         <Text style={styles.secureText}>Secure Payment Gateway</Text>
-      </View>
+      </View> */}
 
       {/* WebView */}
       <WebView

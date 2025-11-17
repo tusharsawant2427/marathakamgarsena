@@ -41,6 +41,12 @@ export type RootStackParamList = {
   };
   ImageViewer: { imageUrl: string; title: string };
   // Payment Screens
+  CashfreePayment: {
+    sessionId: string;
+    orderId: string;
+    amount?: string;
+    description?: string;
+  };
   PaymentWebView: {
     webviewUrl: string;
     orderId: string;
