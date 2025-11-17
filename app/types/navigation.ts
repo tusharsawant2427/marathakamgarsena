@@ -67,6 +67,7 @@ export type RootStackParamList = {
     userId?: number;
   };
   ExamplePayment: undefined;
+  WebView: { url: string; title: string };
 };
 
 export type NavigationProp = NativeStackNavigationProp<RootStackParamList>;

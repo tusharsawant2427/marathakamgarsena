@@ -23,6 +23,7 @@ import PaymentFailedScreen from '../screens/PaymentFailedScreen';
 import PaymentPendingScreen from '../screens/PaymentPendingScreen';
 import PaymentHistoryScreen from '../screens/PaymentHistoryScreen';
 import ExamplePaymentScreen from '../screens/ExamplePaymentScreen';
+import WebViewScreen from '../screens/WebViewScreen';
 import { RootStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -70,6 +71,7 @@ const AppNavigator = () => {
             <Stack.Screen name="PaymentFailed" component={PaymentFailedScreen} />
             <Stack.Screen name="PaymentPending" component={PaymentPendingScreen} />
             <Stack.Screen name="PaymentHistory" component={PaymentHistoryScreen} />
+            <Stack.Screen name="WebView" component={WebViewScreen} />
           </>
         )}
       </Stack.Navigator>
