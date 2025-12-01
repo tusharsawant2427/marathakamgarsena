@@ -17,8 +17,9 @@ interface CashfreePaymentScreenProps {
     params: {
       sessionId: string;
       orderId: string;
-      amount?: string;
+      amount: string;
       description?: string;
+      environment?: string;
     };
   };
   navigation: any;
@@ -28,7 +29,7 @@ const CashfreePaymentScreen: React.FC<CashfreePaymentScreenProps> = ({
   route,
   navigation,
 }) => {
-  const { sessionId, orderId, amount, description } = route.params;
+  const { sessionId, orderId, amount, description, environment } = route.params;
 
   useEffect(() => {
     console.log('Cashfree Payment Screen - Session ID:', sessionId);
@@ -56,10 +57,10 @@ const CashfreePaymentScreen: React.FC<CashfreePaymentScreenProps> = ({
         const cfSession = new CFSession(
           sessionId,
           orderId,
-          CFEnvironment.SANDBOX  // Changed to SANDBOX for testing
+          environment === 'PRODUCTION' ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX
         );
 
-        console.log('CFSession created:', { sessionId, orderId, environment: 'SANDBOX' });
+        console.log('CFSession created:', { sessionId, orderId, environment });
 
         // Create payment callback handler
         const cfCallback: CFCallback = {

@@ -46,6 +46,7 @@ export type RootStackParamList = {
     orderId: string;
     amount?: string;
     description?: string;
+    environment?: string;
   };
   PaymentWebView: {
     webviewUrl: string;

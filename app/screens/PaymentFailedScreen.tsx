@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { getPaymentStatus } from '../services/paymentService';
 import { PaymentStatusResponse } from '../types/payment';
+import Header from '../components/Header';
 
 interface PaymentFailedScreenProps {
   route: {
@@ -55,7 +56,12 @@ const PaymentFailedScreen: React.FC<PaymentFailedScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <Header
+        title="Payment Failed"
+        showBackButton={true}
+        onBackPress={() => navigation.goBack()}
+        showIcons={false}
+      />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Error Icon */}
         <View style={styles.iconContainer}>
@@ -73,7 +79,7 @@ const PaymentFailedScreen: React.FC<PaymentFailedScreenProps> = ({
         {/* Payment Details Card */}
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#ef4444" />
+            <ActivityIndicator size="large" color="#ff5e00" />
             <Text style={styles.loadingText}>Loading payment details...</Text>
           </View>
         ) : (
@@ -283,13 +289,13 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   primaryButton: {
-    backgroundColor: '#667eea',
+    backgroundColor: '#ff5e00',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     marginBottom: 12,
     elevation: 2,
-    shadowColor: '#667eea',
+    shadowColor: '#ff5e00',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -318,7 +324,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tertiaryButtonText: {
-    color: '#667eea',
+    color: '#ff5e00',
     fontSize: 16,
     fontWeight: '600',
   },

@@ -33,6 +33,7 @@ const ExamplePaymentScreen: React.FC = () => {
   const { userData } = useAuth();
   const [description, setDescription] = useState('ID Card payment');
   const [amount, setAmount] = useState<number>(0);
+    const [idCardId, setIdCardId] = useState<number>(0);
   const [loadingAmount, setLoadingAmount] = useState(true);
 
   // Get user ID and phone from auth context
@@ -45,7 +46,9 @@ const ExamplePaymentScreen: React.FC = () => {
       try {
         const { fetchConfigAmount } = await import('../services/paymentService');
         const configAmount = await fetchConfigAmount();
-        setAmount(configAmount);
+        setAmount(configAmount.amount);
+        setIdCardId(configAmount.id_card_id);
+
       } catch (error: any) {
         Alert.alert('Error', error.message || 'Failed to load payment amount');
       } finally {
@@ -115,10 +118,10 @@ const ExamplePaymentScreen: React.FC = () => {
                   <Text style={styles.summaryLabel}>Amount:</Text>
                   <Text style={styles.summaryValue}>₹{amount.toFixed(2)}</Text>
                 </View>
-                <View style={styles.summaryRow}>
+                {/* <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Processing Fee:</Text>
                   <Text style={styles.summaryValue}>₹0</Text>
-                </View>
+                </View> */}
                 <View style={styles.divider} />
                 <View style={styles.summaryRow}>
                   <Text style={styles.totalLabel}>Total Payable:</Text>
@@ -136,6 +139,7 @@ const ExamplePaymentScreen: React.FC = () => {
             buttonText="Proceed to Payment"
             metadata={{
               source: 'mobile_app',
+              id_card_id: idCardId,
               timestamp: new Date().toISOString(),
             }}
             onPaymentInitiated={handlePaymentInitiated}

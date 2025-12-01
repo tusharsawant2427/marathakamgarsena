@@ -201,12 +201,12 @@ export const verifyPayment = async (
  * Fetch config details to get ID card amount
  * @returns ID card amount as number
  */
-export const fetchConfigAmount = async (): Promise<number> => {
+export const fetchConfigAmount = async (): Promise<{amount: number, id_card_id: number}> => {
   try {
     const response = await paymentApi.post<PaymentApiResponse<ConfigResponse>>('/config', {});
     
     if (response.data.success && response.data.data?.id_card) {
-      return parseFloat(response.data.data.id_card.amount);
+      return {amount: parseFloat(response.data.data.id_card.amount), id_card_id: response.data.data.id_card.id};
     } else {
       throw new Error('Failed to fetch config amount');
     }

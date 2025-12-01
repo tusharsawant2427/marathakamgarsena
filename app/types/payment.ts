@@ -16,6 +16,7 @@ export interface CreatePaymentOrderResponse {
   webview_url: string;
   amount: string;
   currency: string;
+  environment: string;
 }
 
 export interface PaymentStatusRequest {

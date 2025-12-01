@@ -14,6 +14,7 @@ import {
 import { getPaymentHistory } from '../services/paymentService';
 import { PaymentHistoryItem } from '../types/payment';
 import { PAYMENT_STATUS } from '../config/paymentConfig';
+import Header from '../components/Header';
 
 interface PaymentHistoryScreenProps {
   route: {
@@ -197,7 +198,7 @@ const PaymentHistoryScreen: React.FC<PaymentHistoryScreenProps> = ({
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor="#fff" />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#667eea" />
+          <ActivityIndicator size="large" color="#ff5e00" />
           <Text style={styles.loadingText}>Loading payment history...</Text>
         </View>
       </SafeAreaView>
@@ -207,17 +208,13 @@ const PaymentHistoryScreen: React.FC<PaymentHistoryScreenProps> = ({
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}>
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Payment History</Text>
-        <View style={styles.backButton} />
-      </View>
+
+      <Header
+        title="Payment History"
+        showBackButton={true}
+        onBackPress={() => navigation.goBack()}
+        showIcons={false}
+      />
 
       {/* Payment List */}
       <FlatList
@@ -230,8 +227,8 @@ const PaymentHistoryScreen: React.FC<PaymentHistoryScreenProps> = ({
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#667eea']}
-            tintColor="#667eea"
+            colors={['#ff5e00']}
+            tintColor="#ff5e00"
           />
         }
         showsVerticalScrollIndicator={false}
@@ -383,12 +380,12 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   emptyButton: {
-    backgroundColor: '#667eea',
+    backgroundColor: '#ff5e00',
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 12,
     elevation: 2,
-    shadowColor: '#667eea',
+    shadowColor: '#ff5e00',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,

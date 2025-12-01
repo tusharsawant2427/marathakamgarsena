@@ -240,13 +240,13 @@ const PaymentSuccessScreen: React.FC<PaymentSuccessScreenProps> = ({
               <Text style={styles.idCardButtonText}>📥 View ID Card</Text>
             </TouchableOpacity>
           )}
-
+{/* 
           <TouchableOpacity
             style={styles.primaryButton}
             onPress={() => navigation.navigate('PaymentHistory', {})}
             activeOpacity={0.8}>
             <Text style={styles.primaryButtonText}>View Payment History</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity
             style={styles.secondaryButton}

@@ -144,6 +144,29 @@ export const fetchNotifications = async (pageNum: number, token: string) => {
   }
 };
 
+export const fetchActiveSubscription = async (token: string) => {
+  try {
+   const response = await fetch(`${API_BASE_URL}/check-subscription-status`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    const responseText = await response.text();
+    console.log('API Response:', responseText); // Log raw response
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return JSON.parse(responseText);
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const readNotification = async (notificationId: number, token: string) => {
   try {
     const response = await fetch(`${API_BASE_URL}/read-notification`, {
@@ -166,4 +189,28 @@ export const readNotification = async (notificationId: number, token: string) =>
   }
 };
 
-export default api; 
+export const fetchUserDetails = async (token: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/user-details`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    const responseText = await response.text();
+    console.log('User Details API Response:', responseText);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return JSON.parse(responseText);
+  } catch (error) {
+    console.error('Error fetching user details:', error);
+    throw error;
+  }
+};
+
+export default api;

@@ -58,13 +58,15 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState<number>(0);
   const [fetchingAmount, setFetchingAmount] = useState(true);
+  const [idCardId, setIdCardId] = useState<number>(0);
 
   useEffect(() => {
     // Fetch amount from config API
     const loadAmount = async () => {
       try {
         const configAmount = await fetchConfigAmount();
-        setAmount(configAmount);
+        setAmount(configAmount.amount);
+        setIdCardId(configAmount.id_card_id);
       } catch (error: any) {
         Alert.alert('Error', error.message || 'Failed to load payment amount');
         if (onPaymentError) {
@@ -122,6 +124,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
           orderId: orderData.order_id,
           amount: orderData.amount,
           description: description,
+          environment: orderData.environment,
         });
       } else {
         console.log('payment_session_id not available, falling back to WebView');
