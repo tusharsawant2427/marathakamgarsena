@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import Pdf from 'react-native-pdf';
+import { WebView } from 'react-native-webview';
 import Header from '../components/Header';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
@@ -19,63 +19,13 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PdfViewer'>;
 const PdfViewerScreen = ({ route, navigation }: Props) => {
   const { pdfUrl, title } = route.params;
   const [language, setLanguage] = useState('en');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const [pdfError, setPdfError] = useState<string | null>(null);
-  const [localPdfPath, setLocalPdfPath] = useState<string | null>(null);
-  const downloadRef = useRef<string | null>(null);
+  const webViewRef = useRef<any>(null);
 
   useEffect(() => {
-    downloadPdf();
     AsyncStorage.getItem('language').then(lang => setLanguage(lang || 'en'));
-
-    return () => {
-      if (downloadRef.current) {
-        RNFetchBlob.fs
-          .unlink(downloadRef.current)
-          .then(() => console.log('PDF cleaned up'))
-          .catch((err) => console.error('Cleanup error:', err));
-      }
-    };
   }, []);
-
-  const downloadPdf = async () => {
-    try {
-      setIsLoading(true);
-      const { config, fs } = RNFetchBlob;
-      const filePath = `${fs.dirs.DocumentDir}/temp_${Date.now()}.pdf`;
-
-      const fetchInstance = RNFetchBlob.config({
-        path: filePath,
-        fileCache: true,
-        appendExt: 'pdf',
-      })
-        .fetch('GET', pdfUrl)
-        .progress((received: string, total: string) => {
-          const totalNum = parseInt(total, 10);
-          if (totalNum > 0) {
-            setLoadingProgress(parseInt(received, 10) / totalNum);
-          }
-        })
-        .then((res) => {
-          setLocalPdfPath(res.path());
-          downloadRef.current = res.path();
-          setIsLoading(false);
-        })
-        .catch((error: Error) => {
-          console.error('PDF download error:', error);
-          setPdfError('Failed to load PDF');
-          setIsLoading(false);
-        });
-    } catch (err) {
-      console.error('Unexpected error:', err);
-      setPdfError('Unexpected error');
-      setIsLoading(false);
-    }
-  };
 
   const handleDownloadToDevice = async () => {
     try {
@@ -116,42 +66,37 @@ const PdfViewerScreen = ({ route, navigation }: Props) => {
 
       <View style={styles.titleContainer}>
         <Text style={styles.title}>{title}</Text>
-        <Text style={styles.pageInfo}>
-          {currentPage} / {totalPages || '...'}
-        </Text>
       </View>
 
       <View style={styles.pdfContainer}>
-        {isLoading ? (
-          <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color="#ff5e00" />
-            <Text style={styles.loaderText}>
-              Loading... {Math.round(loadingProgress * 100)}%
-            </Text>
-          </View>
-        ) : pdfError ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>Error loading PDF.</Text>
-            <Text style={styles.errorDetail}>{pdfError}</Text>
-          </View>
-        ) : localPdfPath ? (
-          <Pdf
-            source={{ uri: localPdfPath }}
-            style={styles.pdf}
-            onLoadComplete={(pages) => setTotalPages(pages)}
-            onPageChanged={(page) => setCurrentPage(page)}
-            onError={(error) => {
-              console.error('PDF error:', error);
-              setPdfError('Failed to display PDF');
-            }}
-          />
-        ) : null}
+        <WebView
+          ref={webViewRef}
+          source={{ uri: `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(pdfUrl)}` }}
+          style={styles.pdf}
+          onLoadStart={() => setIsLoading(true)}
+          onLoadEnd={() => setIsLoading(false)}
+          startInLoadingState={true}
+          renderLoading={() => (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color="#ff5e00" />
+              <Text style={styles.loaderText}>Loading PDF...</Text>
+            </View>
+          )}
+          onError={(syntheticEvent) => {
+            const { nativeEvent } = syntheticEvent;
+            console.error('WebView error:', nativeEvent);
+          }}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          scalesPageToFit={true}
+          mixedContentMode="always"
+        />
       </View>
 
       <TouchableOpacity
         style={styles.downloadButton}
         onPress={handleDownloadToDevice}
-        disabled={isDownloading || !localPdfPath}
+        disabled={isDownloading}
       >
         {isDownloading ? (
           <ActivityIndicator color="#fff" />
@@ -180,39 +125,23 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 4,
   },
-  pageInfo: {
-    fontSize: 14,
-    color: '#666',
-  },
   pdfContainer: {
     flex: 1,
   },
   loaderContainer: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#fff',
   },
   loaderText: {
     marginTop: 8,
     fontSize: 16,
     color: '#666',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#ff5e00',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  errorDetail: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
   },
   pdf: {
     flex: 1,
