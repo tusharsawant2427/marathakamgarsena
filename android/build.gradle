@@ -11,6 +11,7 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://maven.cashfree.com/release' }
     }
     dependencies {
         classpath("com.android.tools.build:gradle:$androidGradlePluginVersion")

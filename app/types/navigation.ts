@@ -40,7 +40,41 @@ export type RootStackParamList = {
     };
   };
   ImageViewer: { imageUrl: string; title: string };
+  // Payment Screens
+  CashfreePayment: {
+    sessionId: string;
+    orderId: string;
+    amount?: string;
+    description?: string;
+    environment?: string;
+  };
+  PaymentWebView: {
+    webviewUrl: string;
+    orderId: string;
+    amount?: string;
+    description?: string;
+  };
+  PaymentSuccess: {
+    orderId: string;
+    amount?: string;
+    description?: string;
+  };
+  PaymentFailed: {
+    orderId: string;
+    amount?: string;
+    description?: string;
+    errorMessage?: string;
+  };
+  PaymentPending: {
+    orderId: string;
+    amount?: string;
+    description?: string;
+  };
+  PaymentHistory: {
+    userId?: number;
+  };
+  ExamplePayment: undefined;
   WebView: { url: string; title: string };
 };
 
-export type NavigationProp = NativeStackNavigationProp<RootStackParamList>; 
+export type NavigationProp = NativeStackNavigationProp<RootStackParamList>;

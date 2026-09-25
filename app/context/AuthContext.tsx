@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { requestUserPermission } from '../config/firebase';
+import { fetchUserDetails } from '../services/api';
 
 type AuthContextType = {
   isAuthenticated: boolean;
@@ -9,6 +10,8 @@ type AuthContextType = {
   login: (data: any) => Promise<void>;
   logout: () => Promise<void>;
   setNeedsRegistration: (needs: boolean) => void;
+  updateUserData: (data: any) => Promise<void>;
+  refreshUserData: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,12 +31,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const storedToken = await AsyncStorage.getItem('authToken');
       
       if (storedUserData && storedToken) {
-        const userData = JSON.parse(storedUserData);
-        setUserData(userData);
+        const parsedUserData = JSON.parse(storedUserData);
+        setUserData(parsedUserData);
         setIsAuthenticated(true);
         
         // Check if user needs registration
-        if (!userData.uniqueId) {
+        if (!parsedUserData.uniqueId) {
           setNeedsRegistration(true);
         } else {
           setNeedsRegistration(false);
@@ -44,6 +47,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (error) {
       console.error('Error checking auth:', error);
+    }
+  };
+
+  const updateUserData = async (data: any) => {
+    try {
+      const updatedData = { ...userData, ...data };
+      await AsyncStorage.setItem('userData', JSON.stringify(updatedData));
+      setUserData(updatedData);
+    } catch (error) {
+      console.error('Error updating user data:', error);
+      throw error;
+    }
+  };
+
+  const refreshUserData = async () => {
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+      if (token) {
+        const response = await fetchUserDetails(token);
+        if (response.success && response.data) {
+          // Merge data and ensure isPremium is synced with API response
+          const updatedData = { 
+            ...userData, 
+            ...response.data,
+            // Ensure isPremium reflects the actual subscription status from API
+            isPremium: response.data.is_premium || response.data.subscription_details?.has_active_subscription || false
+          };
+          await AsyncStorage.setItem('userData', JSON.stringify(updatedData));
+          setUserData(updatedData);
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+      // We don't throw here to avoid breaking UI if background refresh fails, 
+      // but we log it.
     }
   };
 
@@ -83,7 +121,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, userData, needsRegistration, login, logout, setNeedsRegistration }}>
+    <AuthContext.Provider value={{ isAuthenticated, userData, needsRegistration, login, logout, setNeedsRegistration, updateUserData, refreshUserData }}>
       {children}
     </AuthContext.Provider>
   );
@@ -95,4 +133,4 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}; 
+};

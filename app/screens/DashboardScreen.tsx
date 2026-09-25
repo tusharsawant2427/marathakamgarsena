@@ -336,6 +336,26 @@ const DashboardScreen = ({ navigation }: DashboardScreenProps) => {
             </TouchableOpacity>
           ))}
         </View>
+
+        <View style={styles.legalSection}>
+          <TouchableOpacity onPress={() => navigation.navigate('WebView', {
+            url: 'https://marathikamgarsena.com/terms-conditions?source=android',
+            title: language === 'mr' ? 'नियम आणि अटी' : 'Terms & Conditions',
+          })}>
+            <Text style={styles.legalLink}>
+              {language === 'mr' ? 'नियम व अटी' : 'Terms & Conditions'}
+            </Text>
+          </TouchableOpacity>
+          <Text style={styles.legalSeparator}>|</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('WebView', {
+            url: 'https://marathikamgarsena.com/privacy-policy?source=android',
+            title: language === 'mr' ? 'गोपनीयता धोरण' : 'Privacy Policy',
+          })}>
+            <Text style={styles.legalLink}>
+              {language === 'mr' ? 'गोपनीयता धोरण' : 'Privacy Policy'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -500,6 +520,24 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
   },
+  legalSection: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 40,
+    paddingVertical: 10,
+  },
+  legalLink: {
+    fontSize: 14,
+    color: '#666',
+    textDecorationLine: 'underline',
+  },
+  legalSeparator: {
+    fontSize: 14,
+    color: '#ccc',
+    marginHorizontal: 10,
+  },
 });
 
-export default DashboardScreen; 
+export default DashboardScreen;
